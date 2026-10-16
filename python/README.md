@@ -75,7 +75,7 @@ Create/reinstall passwords are `SecretStr`. Read them deliberately with `result.
 
 ## Transport and limits
 
-`Arct(base_url=..., transport=..., timeout=30, operation_timeout=600)` and `AsyncArct` accept HTTPX transports for tests. HTTP timeouts and deadlines must be finite and positive. HTTPS is required except explicit localhost test URLs. Redirects are not followed, so authorization cannot move to another origin. SDK logging never records bodies.
+`Arct(base_url=..., transport=..., timeout=30, operation_timeout=600)` and `AsyncArct` accept HTTPX transports for tests. HTTP timeouts and deadlines must be finite and positive. Synchronous calls check deadlines between raw response chunks and before accepting success; an in-progress blocking socket phase may overrun the operation deadline until its underlying HTTP timeout, while asynchronous calls cancel in-flight I/O. HTTPS is required except explicit localhost test URLs. Redirects are not followed, so authorization cannot move to another origin. SDK logging never records bodies.
 
 Clients resolve `account.get()` before the first mutation to share account budgets. Local rolling limits are 120 reads/minute per token, 30 writes/minute per token and account, and 5 paid calls/minute plus 20/hour per token and account. Paid calls also consume writes. Sync and async clients share budgets within the process; separate processes and machines rely on server enforcement. Server `429` feedback remains authoritative.
 

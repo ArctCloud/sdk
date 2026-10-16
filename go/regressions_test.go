@@ -2,6 +2,7 @@ package arct
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -51,7 +52,7 @@ func TestScheduledDeleteRejectsWrongTypesBeforeIdentity(t *testing.T) {
 				if r.URL.Query().Get("at_period_end") != fmt.Sprint(v) {
 					t.Fatal(r.URL.RawQuery)
 				}
-				fmt.Fprint(w, `{"status":"deleting"}`)
+				fmt.Fprint(w, `{"id":"id","status":"deleting"}`)
 			})
 			if _, err := c.Call(context.Background(), "servers_delete", "id", Params{"at_period_end": v}, nil); err != nil {
 				t.Fatal(err)
@@ -148,7 +149,7 @@ func TestUnsupportedBodylessSuccessRejected(t *testing.T) {
 func TestWaitAcknowledgedTopLevelRestartAndRequiredState(t *testing.T) {
 	for _, state := range []string{"running", "error", "suspended", "deleting"} {
 		t.Run(state, func(t *testing.T) {
-			c := testClient(t, func(w http.ResponseWriter, r *http.Request) { fmt.Fprintf(w, `{"status":%q}`, state) })
+			c := testClient(t, func(w http.ResponseWriter, r *http.Request) { fmt.Fprintf(w, `{"id":"id","status":%q}`, state) })
 			action := "wait"
 			original := Result(nil)
 			if state == "running" {
@@ -234,5 +235,103 @@ func TestScheduledDeleteCannotAcceptBodylessResult(t *testing.T) {
 	var uncertain *UncertainOperationError
 	if out != nil || !errors.As(err, &uncertain) {
 		t.Fatalf("%v %v", out, err)
+	}
+}
+func TestOperationSpecificSuccessEnvelopes(t *testing.T) {
+	for _, op := range []string{"account_get", "servers_create", "servers_get", "servers_update", "servers_delete", "servers_start", "servers_stop", "servers_restart", "servers_reinstall", "servers_resize", "servers_resize_options", "servers_cancel_deletion", "ssh_keys_create", "ssh_keys_get", "invoices_get"} {
+		t.Run(op, func(t *testing.T) {
+			calls := 0
+			c := testClient(t, func(w http.ResponseWriter, r *http.Request) {
+				calls++
+				w.WriteHeader(201)
+				fmt.Fprint(w, `{"unexpected":"shape"}`)
+			})
+			body := Params(nil)
+			switch op {
+			case "servers_create":
+				body = Params{"hostname": "web", "location": "fra", "plan": "small", "image_id": "00000000-0000-0000-0000-000000000001"}
+			case "servers_update":
+				body = Params{"labels": []string{}}
+			case "servers_reinstall":
+				body = Params{"image_id": "00000000-0000-0000-0000-000000000001"}
+			case "servers_resize":
+				body = Params{"plan": "medium", "expected_amount": nil}
+			case "ssh_keys_create":
+				body = Params{"name": "key", "public_key": "ssh-ed25519 AAAA"}
+			}
+			out, err := c.Call(context.Background(), op, "id", nil, body)
+			var api *APIError
+			mutation := !strings.HasSuffix(op, "_get") && op != "servers_resize_options"
+			if out != nil || !errors.As(err, &api) || api.Code != "invalid_response" || api.Status != 201 || calls != 1 {
+				t.Fatalf("%v %v calls=%d", out, err, calls)
+			}
+			if mutation {
+				var uncertain *UncertainOperationError
+				if !errors.As(err, &uncertain) {
+					t.Fatalf("%T", err)
+				}
+			}
+		})
+	}
+}
+func TestCreateAcknowledgementRequiresTypedOrderAndServer(t *testing.T) {
+	for _, body := range []string{`{"order":{},"server":null}`, `{"order":{"id":"order","server_id":null}}`, `{"order":{"id":"order","server_id":null},"server":"wrong"}`, `{"order":{"id":"order","server_id":null},"server":null,"password":123}`} {
+		t.Run(body, func(t *testing.T) {
+			calls := 0
+			c := testClient(t, func(w http.ResponseWriter, r *http.Request) { calls++; w.WriteHeader(201); fmt.Fprint(w, body) })
+			out, err := c.Servers.Create(context.Background(), Params{"hostname": "web", "location": "fra", "plan": "small", "image_id": "00000000-0000-0000-0000-000000000001"})
+			var uncertain *UncertainOperationError
+			if out != nil || !errors.As(err, &uncertain) || calls != 1 {
+				t.Fatalf("%v %v %d", out, err, calls)
+			}
+		})
+	}
+}
+func TestAcknowledgementOptionalFieldsAndUnknownValues(t *testing.T) {
+	f := fixture(t)
+	for _, tc := range []struct{ name, op, key string }{{"create", "servers_create", "create"}, {"delayed", "servers_create", "create_delayed"}, {"reinstall", "servers_reinstall", "server"}, {"resize", "servers_resize", ""}, {"server", "servers_get", "server"}} {
+		t.Run(tc.name, func(t *testing.T) {
+			var value map[string]any
+			if tc.key != "" {
+				decoder := json.NewDecoder(strings.NewReader(string(f[tc.key])))
+				decoder.UseNumber()
+				if err := decoder.Decode(&value); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if tc.op == "servers_reinstall" {
+				value = map[string]any{"server": value}
+			}
+			if tc.op == "servers_resize" {
+				value = map[string]any{"resize_id": "resize", "status": "future_resize", "to_plan": "medium"}
+			}
+			delete(value, "password")
+			value["extra"] = true
+			if tc.op == "servers_get" {
+				value["status"] = "future_server"
+			}
+			raw, err := json.Marshal(value)
+			if err != nil {
+				t.Fatal(err)
+			}
+			calls := 0
+			c := testClient(t, func(w http.ResponseWriter, r *http.Request) { calls++; fmt.Fprint(w, string(raw)) })
+			body := Params(nil)
+			switch tc.op {
+			case "servers_create":
+				body = Params{"hostname": "web", "location": "fra", "plan": "small", "image_id": "00000000-0000-0000-0000-000000000001"}
+			case "servers_reinstall":
+				body = Params{"image_id": "00000000-0000-0000-0000-000000000001"}
+			case "servers_resize":
+				body = Params{"plan": "medium", "expected_amount": nil}
+			}
+			out, err := c.Call(context.Background(), tc.op, "id", nil, body)
+			if err != nil || out["extra"] != true || calls != 1 {
+				t.Fatalf("%v %v %d", out, err, calls)
+			}
+			if _, hasPassword := out["password"]; hasPassword {
+				t.Fatal("optional password was fabricated")
+			}
+		})
 	}
 }

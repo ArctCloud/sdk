@@ -203,5 +203,102 @@ func validateResponse(operation string, value map[string]any) error {
 			return fmt.Errorf("expected nonnegative integer total_pages")
 		}
 	}
+
+	switch operation {
+	case "servers_create":
+		order, ok := value["order"].(map[string]any)
+		if !ok || !responseString(order, "id") {
+			return fmt.Errorf("expected order acknowledgement")
+		}
+		serverID, hasID := order["server_id"]
+		if !hasID {
+			return fmt.Errorf("expected nullable order server_id")
+		}
+		if serverID != nil {
+			if id, ok := serverID.(string); !ok || id == "" {
+				return fmt.Errorf("expected order server_id")
+			}
+		}
+		server, hasServer := value["server"]
+		if !hasServer || server != nil && !responseServer(server) {
+			return fmt.Errorf("expected nullable server acknowledgement")
+		}
+		if password := value["password"]; password != nil {
+			if _, ok := password.(string); !ok {
+				return fmt.Errorf("expected nullable password")
+			}
+		}
+	case "servers_reinstall":
+		if !responseServer(value["server"]) {
+			return fmt.Errorf("expected reinstalled server")
+		}
+		if password := value["password"]; password != nil {
+			if _, ok := password.(string); !ok {
+				return fmt.Errorf("expected nullable password")
+			}
+		}
+	case "servers_resize":
+		if !responseString(value, "resize_id") || !responseString(value, "status") || !responseString(value, "to_plan") {
+			return fmt.Errorf("expected resize acknowledgement")
+		}
+	case "servers_resize_options":
+		if _, ok := value["can_resize"].(bool); !ok {
+			return fmt.Errorf("expected can_resize")
+		}
+		if !responseString(value, "current_plan") {
+			return fmt.Errorf("expected current_plan")
+		}
+		pending, hasPending := value["pending_resize"]
+		if !hasPending {
+			return fmt.Errorf("expected nullable pending_resize")
+		}
+		if pending != nil {
+			if _, ok := pending.(map[string]any); !ok {
+				return fmt.Errorf("expected pending_resize object")
+			}
+		}
+		plans, ok := value["plans"].([]any)
+		if !ok {
+			return fmt.Errorf("expected resize plans")
+		}
+		for _, item := range plans {
+			plan, ok := item.(map[string]any)
+			if !ok || !responseString(plan, "slug") {
+				return fmt.Errorf("expected resize plan")
+			}
+			if _, ok := plan["eligible"].(bool); !ok {
+				return fmt.Errorf("expected plan eligibility")
+			}
+			amount, hasAmount := plan["amount_due_today"]
+			if !hasAmount {
+				return fmt.Errorf("expected nullable resize amount")
+			}
+			if amount != nil {
+				if _, ok := amount.(json.Number); !ok {
+					return fmt.Errorf("expected numeric resize amount")
+				}
+			}
+		}
+	case "servers_get", "servers_update", "servers_delete", "servers_start", "servers_stop", "servers_restart", "servers_cancel_deletion":
+		if !responseServer(value) {
+			return fmt.Errorf("expected server acknowledgement")
+		}
+	case "account_get", "ssh_keys_get", "ssh_keys_create", "invoices_get":
+		if !responseString(value, "id") {
+			return fmt.Errorf("expected resource identifier")
+		}
+		if operation == "invoices_get" && !responseString(value, "status") {
+			return fmt.Errorf("expected invoice status")
+		}
+	}
 	return nil
+}
+
+func responseString(value map[string]any, key string) bool {
+	v, ok := value[key].(string)
+	return ok && v != ""
+}
+func responseServer(value any) bool {
+	server, ok := value.(map[string]any)
+	return ok && responseString(server, "id") && responseString(server, "status")
 }

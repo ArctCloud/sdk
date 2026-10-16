@@ -84,11 +84,11 @@ class Transport:
     def deadline(self):
         return min(_DEADLINE.get() or float("inf"), time.monotonic() + self.operation_timeout)
 
-    def parse(self, response, model, op):
+    def parse(self, response, model, op, query):
         if not 200 <= response.status_code < 300:
             raise from_response(response, self.token.get_secret_value())
         if response.status_code == 204:
-            if op in ("servers_delete", "ssh_keys_delete"):
+            if op == "ssh_keys_delete" or (op == "servers_delete" and query.get("at_period_end") is not True):
                 return None
             raise APIError("API returned an unexpected empty response", status=204, code="invalid_response")
         if model is None:
@@ -165,7 +165,7 @@ class Transport:
                             remaining(deadline)
                             chunks.append(chunk)
                         response = buffered_response(streamed, b"".join(chunks), deadline, encoded=True)
-                value = self.parse(response, model, op)
+                value = self.parse(response, model, op, query)
                 remaining(deadline)
                 if op == "servers_create":
                     value.__dict__["_arct_hostname"] = body["hostname"]
@@ -240,7 +240,7 @@ class Transport:
                                 remaining(deadline)
                                 chunks.append(chunk)
                             response = buffered_response(streamed, b"".join(chunks), deadline, encoded=True)
-                value = self.parse(response, model, op)
+                value = self.parse(response, model, op, query)
                 remaining(deadline)
                 if op == "servers_create":
                     value.__dict__["_arct_hostname"] = body["hostname"]

@@ -373,3 +373,18 @@ test('account lookup failure and cancellation prevent mutation', async () => {
   await assert.rejects(pending, { name: 'AbortError' });
   assert.equal(mutations, 0);
 });
+for (const atPeriodEnd of [undefined, false, true]) test(`bodyless server deletion retains mode ${atPeriodEnd}`, async () => {
+  const { arct, calls } = client([new Response(null, { status: 204 })]);
+  if (atPeriodEnd === true) {
+    await assert.rejects(arct.servers.delete(id, { atPeriodEnd }), error => error instanceof sdk.UncertainOperationError && error.status === 204 && error.code === 'invalid_response');
+  } else {
+    assert.equal(await arct.servers.delete(id, atPeriodEnd === undefined ? undefined : { atPeriodEnd }), null);
+  }
+  assert.equal(calls.length, 1);
+  assert.equal(new URL(calls[0].url).searchParams.get('at_period_end'), atPeriodEnd === undefined ? null : String(atPeriodEnd));
+});
+test('bodyless SSH key deletion remains valid', async () => {
+  const { arct, calls } = client([new Response(null, { status: 204 })]);
+  assert.equal(await arct.sshKeys.delete(id), undefined);
+  assert.equal(calls.length, 1);
+});

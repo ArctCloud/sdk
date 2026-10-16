@@ -64,7 +64,7 @@ func TestOperationMatrix(t *testing.T) {
 				if tc.op == "ssh_keys_delete" {
 					w.WriteHeader(204)
 				} else {
-					fmt.Fprint(w, `{"status":"future_state","amount":0.100000000000000001,"new":true,"data":[],"pagination":{"total_pages":0}}`)
+					fmt.Fprint(w, `{"id":"id","status":"future_state","amount":0.100000000000000001,"new":true,"order":{"id":"order","server_id":null},"server":{"id":"id","status":"future_state"},"resize_id":"resize","to_plan":"medium","can_resize":true,"current_plan":"small","pending_resize":null,"plans":[],"data":[],"pagination":{"total_pages":0}}`)
 				}
 			})
 			result, err := c.Call(context.Background(), tc.op, "id", Params{}, tc.body)

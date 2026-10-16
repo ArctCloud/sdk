@@ -154,7 +154,8 @@ export class Policy {
     const signal = init.signal ?? AbortSignal.timeout(this.#timeoutMs);
     const method = init.method ?? 'GET';
     const read = method === 'GET';
-    const path = new URL(url).pathname.slice(this.#pathPrefix.length);
+    const requestURL = new URL(url);
+    const path = requestURL.pathname.slice(this.#pathPrefix.length);
     const create = method === 'POST' && path === '/servers';
     const paid = create || (method === 'POST' && path.endsWith('/resize'));
     if (!read) await this.#ensureAccount(signal);
@@ -179,6 +180,8 @@ export class Policy {
         throw invalidResponse(read, response.status, 'body_error');
       }
       if (signal.aborted) throw abortError();
+      const bodyless = response.status === 204 && method === 'DELETE' &&
+        (/^\/ssh-keys\/[^/]+$/.test(path) || (/^\/servers\/[^/]+$/.test(path) && requestURL.searchParams.get('at_period_end') !== 'true'));
       let body: unknown;
       try {
         body = JSON.parse(text, function (this: object, key: string, value: unknown, context?: { source?: string }) {
@@ -189,10 +192,10 @@ export class Policy {
           return value;
         });
       } catch (error) {
-        if (response.ok && !(response.status === 204 && method === 'DELETE')) throw invalidResponse(read, response.status);
+        if (response.ok && !bodyless) throw invalidResponse(read, response.status);
       }
       if (response.ok) {
-        if (!(response.status === 204 && method === 'DELETE') && !validResponse(path, method, body)) throw invalidResponse(read, response.status);
+        if (!bodyless && !validResponse(path, method, body)) throw invalidResponse(read, response.status);
         response.json = async () => body;
         return response;
       }

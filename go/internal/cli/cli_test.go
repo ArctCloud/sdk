@@ -76,7 +76,7 @@ func TestCommands(t *testing.T) {
 					}
 				}
 				w.Header().Set("Content-Type", "application/json")
-				fmt.Fprint(w, `{"id":"`+id+`","password":"one-time","status":"accepted","data":[],"pagination":{"total_pages":1}}`)
+				fmt.Fprint(w, `{"id":"`+id+`","password":"one-time","status":"accepted","order":{"id":"order","server_id":"`+id+`"},"server":{"id":"`+id+`","status":"provisioning"},"resize_id":"resize","to_plan":"medium","can_resize":true,"current_plan":"small","pending_resize":null,"plans":[],"data":[],"pagination":{"total_pages":1}}`)
 			})
 			args := append(append([]string{}, tc.args...), "--output", "json")
 			code := a.Run(context.Background(), args)
@@ -108,7 +108,7 @@ func TestWaitOutputAndColumns(t *testing.T) {
 		w.Header().Set("Content-Type", "application/json")
 		if r.Method == "POST" {
 			w.WriteHeader(201)
-			fmt.Fprint(w, `{"order":{"server_id":"`+id+`"},"server":null,"password":"one-time"}`)
+			fmt.Fprint(w, `{"order":{"id":"order","server_id":"`+id+`"},"server":null,"password":"one-time"}`)
 		} else {
 			fmt.Fprint(w, `{"id":"`+id+`","status":"running"}`)
 		}
@@ -173,7 +173,7 @@ func TestFlagAndBodyDistinctions(t *testing.T) {
 				if string(raw) != test.expected {
 					t.Errorf("%s != %s", raw, test.expected)
 				}
-				fmt.Fprint(w, `{"status":"accepted"}`)
+				fmt.Fprint(w, `{"id":"`+id+`","status":"accepted","order":{"id":"order","server_id":null},"server":{"id":"`+id+`","status":"provisioning"}}`)
 			})
 			if code := a.Run(context.Background(), test.args); code != 0 {
 				t.Fatalf("%d %s", code, errOut)
@@ -233,7 +233,7 @@ func TestPublicKeyStdinAndLoginStdin(t *testing.T) {
 }
 func TestPasswordFlagDoesNotRevealTokens(t *testing.T) {
 	a, out, errOut := appTest(t, func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, `{"password":"one-time","access_token":"should-hide"}`)
+		fmt.Fprint(w, `{"order":{"id":"order","server_id":null},"server":null,"password":"one-time","access_token":"should-hide"}`)
 	})
 	code := a.Run(context.Background(), []string{"servers", "create", "--hostname", "web", "--location", "fra", "--plan", "small", "--image", id, "--yes", "--show-password", "--output", "json"})
 	if code != 0 || !strings.Contains(out.String(), "one-time") || strings.Contains(out.String(), "should-hide") {
@@ -243,7 +243,7 @@ func TestPasswordFlagDoesNotRevealTokens(t *testing.T) {
 func TestWaitTimeoutKeepsOneTimeResult(t *testing.T) {
 	a, out, errOut := appTest(t, func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "POST" {
-			fmt.Fprint(w, `{"server":{"id":"`+id+`","status":"provisioning"},"order":{"id":"order"},"password":"one-time"}`)
+			fmt.Fprint(w, `{"server":{"id":"`+id+`","status":"provisioning"},"order":{"id":"order","server_id":"`+id+`"},"password":"one-time"}`)
 		} else {
 			fmt.Fprint(w, `{"id":"`+id+`","status":"provisioning"}`)
 		}

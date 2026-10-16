@@ -66,6 +66,19 @@ func TestSharedMoneyAndSecrets(t *testing.T) {
 			if key == "money_json" {
 				raw = []byte(money)
 			}
+			var envelope map[string]any
+			decoder := json.NewDecoder(strings.NewReader(string(raw)))
+			decoder.UseNumber()
+			if err := decoder.Decode(&envelope); err != nil {
+				t.Fatal(err)
+			}
+			if _, ok := envelope["id"]; !ok {
+				envelope["id"] = "fixture-account"
+			}
+			raw, err := json.Marshal(envelope)
+			if err != nil {
+				t.Fatal(err)
+			}
 			c := testClient(t, func(w http.ResponseWriter, r *http.Request) { w.Write(raw) })
 			r, err := c.Account.Get(context.Background())
 			if err != nil {
@@ -119,7 +132,7 @@ func TestResizeQuoteExactAndExplicitNull(t *testing.T) {
 			c := testClient(t, func(w http.ResponseWriter, r *http.Request) {
 				calls++
 				if r.Method == "GET" {
-					fmt.Fprint(w, `{"can_resize":true,"plans":[{"slug":"medium","eligible":true,"amount_due_today":0.100000000000000001}]}`)
+					fmt.Fprint(w, `{"can_resize":true,"current_plan":"small","pending_resize":null,"plans":[{"slug":"medium","eligible":true,"amount_due_today":0.100000000000000001}]}`)
 					return
 				}
 				var body map[string]json.RawMessage
@@ -131,7 +144,7 @@ func TestResizeQuoteExactAndExplicitNull(t *testing.T) {
 				if string(body["expected_amount"]) != want {
 					t.Fatalf("%s", body["expected_amount"])
 				}
-				fmt.Fprint(w, `{"status":"pending_payment","to_plan":"medium"}`)
+				fmt.Fprint(w, `{"status":"pending_payment","resize_id":"resize","to_plan":"medium"}`)
 			})
 			var err error
 			if explicit {
@@ -261,7 +274,7 @@ func TestWritesResolveSharedAccountAutomatically(t *testing.T) {
 			fmt.Fprint(w, `{"id":"shared-auto-account"}`)
 		} else {
 			writes++
-			fmt.Fprint(w, `{"status":"applied"}`)
+			fmt.Fprint(w, `{"status":"applied","resize_id":"resize","to_plan":"medium"}`)
 		}
 	}))
 	defer s.Close()
@@ -304,7 +317,7 @@ func TestConcurrentIdentityResolution(t *testing.T) {
 			fmt.Fprint(w, `{"id":"concurrent-account"}`)
 		} else {
 			writes++
-			fmt.Fprint(w, `{"status":"provisioning"}`)
+			fmt.Fprint(w, `{"id":"id","status":"provisioning"}`)
 		}
 	}))
 	defer s.Close()

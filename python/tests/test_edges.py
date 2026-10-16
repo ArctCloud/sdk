@@ -696,3 +696,39 @@ def test_delete_return_type_includes_documented_empty_result():
     for cls in (ServersApi, AsyncServersApi):
         annotation = get_type_hints(cls.delete)["return"]
         assert set(get_args(annotation)) == {Server, type(None)}
+
+
+@pytest.mark.parametrize("asynchronous", [False, True])
+@pytest.mark.parametrize("resource,scheduled", [("servers", None), ("servers", False), ("servers", True), ("ssh_keys", None)])
+def test_bodyless_delete_preserves_requested_mode(asynchronous, resource, scheduled):
+    from arct.errors import UncertainOperationError
+    Arct, AsyncArct = sdk()
+    calls = []
+    def handle(request):
+        if request.url.path.endswith("/account"):
+            return httpx.Response(200, json=ACCOUNT)
+        calls.append(request)
+        return httpx.Response(204)
+    kwargs = {} if scheduled is None else {"at_period_end": scheduled}
+    if asynchronous:
+        async def run():
+            async with AsyncArct(token="delete-mode", transport=httpx.MockTransport(handle)) as client:
+                if scheduled is True:
+                    with pytest.raises(UncertainOperationError) as error:
+                        await getattr(client, resource).delete(ID, **kwargs)
+                    assert error.value.status == 204
+                else:
+                    assert await getattr(client, resource).delete(ID, **kwargs) is None
+        asyncio.run(run())
+    else:
+        with Arct(token="delete-mode", transport=httpx.MockTransport(handle)) as client:
+            if scheduled is True:
+                with pytest.raises(UncertainOperationError) as error:
+                    getattr(client, resource).delete(ID, **kwargs)
+                assert error.value.status == 204
+            else:
+                assert getattr(client, resource).delete(ID, **kwargs) is None
+    assert len(calls) == 1
+    assert calls[0].method == "DELETE"
+    if scheduled is not None:
+        assert calls[0].url.params["at_period_end"] == str(scheduled).lower()
