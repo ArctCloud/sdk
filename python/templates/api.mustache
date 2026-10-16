@@ -1,0 +1,30 @@
+from __future__ import annotations
+
+from typing import Annotated, Any, Literal
+from uuid import UUID
+from decimal import Decimal
+from pydantic import Field, StrictStr, StrictBool, StrictInt, TypeAdapter
+from arct._types import UNSET, Unset
+from arct._generated.models import *
+
+
+class {{classname}}:
+    def __init__(self, client):
+        self._client = client
+{{#operations}}{{#operation}}
+
+    def {{vendorExtensions.x-arct-name}}(self{{{vendorExtensions.x-arct-signature}}}) -> {{{vendorExtensions.x-arct-return-type}}}:
+{{{vendorExtensions.x-arct-prepare}}}
+        return self._client.request("{{operationId}}", "{{httpMethod}}", {{{vendorExtensions.x-arct-path}}}, query, body, {{#returnType}}{{{returnType}}}{{/returnType}}{{^returnType}}None{{/returnType}})
+{{/operation}}{{/operations}}
+
+
+class Async{{classname}}:
+    def __init__(self, client):
+        self._client = client
+{{#operations}}{{#operation}}
+
+    async def {{vendorExtensions.x-arct-name}}(self{{{vendorExtensions.x-arct-signature}}}) -> {{{vendorExtensions.x-arct-return-type}}}:
+{{{vendorExtensions.x-arct-prepare}}}
+        return await self._client.request("{{operationId}}", "{{httpMethod}}", {{{vendorExtensions.x-arct-path}}}, query, body, {{#returnType}}{{{returnType}}}{{/returnType}}{{^returnType}}None{{/returnType}})
+{{/operation}}{{/operations}}

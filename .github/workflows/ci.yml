@@ -1,0 +1,83 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  generation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '22'
+          package-manager-cache: false
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: python -m unittest discover -s scripts -p 'release_*_test.py' -v
+      - run: python scripts/prepare_openapi.py --check
+      - run: python scripts/check_contract.py
+      - run: python scripts/openapi_generator.py --download-only
+      - run: python python/scripts/generate.py --check
+      - run: python go/scripts/generate.py --check
+      - run: npm run generate:check --prefix typescript
+
+  packages:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '22'
+          package-manager-cache: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: stable
+          cache: false
+      - name: Python tests and build
+        run: |
+          python -m pip install './python[test]'
+          python -m pytest python/tests
+          python -m build python
+          python scripts/release_smoke.py python
+      - name: TypeScript tests and package
+        run: |
+          npm ci --prefix typescript
+          npm test --prefix typescript
+          python scripts/release_smoke.py typescript
+      - name: Go tests and vet
+        working-directory: go
+        run: |
+          go test ./...
+          go vet ./...
+      - name: Go race detector
+        if: runner.os == 'Linux'
+        working-directory: go
+        run: go test -race ./...
+      - run: python scripts/release_smoke.py cli

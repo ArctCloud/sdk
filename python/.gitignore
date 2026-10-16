@@ -1,0 +1,5 @@
+.venv/
+.compat/
+__pycache__/
+.pytest_cache/
+dist/

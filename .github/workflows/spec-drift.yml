@@ -1,0 +1,90 @@
+name: Upstream spec drift
+
+on:
+  schedule:
+    - cron: '23 4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: write
+
+concurrency:
+  group: upstream-spec-drift
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '22'
+          package-manager-cache: false
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Read upstream contract
+        id: upstream
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          import urllib.request
+          target = Path('api/upstream-openapi.json')
+          request = urllib.request.Request('https://api.arct.cloud/v1/openapi.json', headers={'User-Agent': 'arct-sdk-ci/0.1.0'}, method='GET')
+          with urllib.request.urlopen(request, timeout=30) as response:
+              upstream = json.load(response)
+          changed = upstream != json.loads(target.read_text())
+          if changed:
+              target.write_text(json.dumps(upstream, indent=2) + '\n')
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              output.write(f'changed={str(changed).lower()}\n')
+          PY
+      - name: Normalize and regenerate
+        id: generation
+        if: steps.upstream.outputs.changed == 'true'
+        continue-on-error: true
+        run: |
+          python scripts/prepare_openapi.py
+          python scripts/openapi_generator.py --download-only
+          python python/scripts/generate.py
+          python go/scripts/generate.py
+          npm run generate --prefix typescript
+          python scripts/check_contract.py
+      - name: Open review PR and run CI
+        if: steps.upstream.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GENERATION_STATUS: ${{ steps.generation.outcome }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          branch=automation/openapi-update
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git switch -c "$branch"
+          git add api/upstream-openapi.json api/openapi.json python/src/arct/_generated go/internal/generated typescript/src/generated
+          git commit -m 'Update upstream API contract and generated clients'
+          git fetch origin "$branch" || true
+          git push --force-with-lease origin "HEAD:refs/heads/$branch"
+          cat > "$RUNNER_TEMP/spec-pr.md" <<EOF
+          Update the public OpenAPI snapshot and regenerate all SDK transports.
+
+          Normalization, generation and contract validation: $GENERATION_STATUS. Review the workflow log if this failed; incompatible upstream changes may require generator or overlay updates. CI is dispatched explicitly because a GITHUB_TOKEN-created PR does not trigger pull_request workflows. No automatic merge.
+          EOF
+          pr_number=$(gh pr list --head "$branch" --base "$DEFAULT_BRANCH" --json number --jq '.[0].number // empty')
+          if [ -n "$pr_number" ]; then
+            gh pr edit "$pr_number" --body-file "$RUNNER_TEMP/spec-pr.md"
+          else
+            gh pr create --base "$DEFAULT_BRANCH" --head "$branch" --title 'Update upstream API contract' --body-file "$RUNNER_TEMP/spec-pr.md"
+          fi
+          gh workflow run ci.yml --ref "$branch"

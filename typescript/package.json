@@ -1,0 +1,34 @@
+{
+  "name": "@arct-cloud/sdk",
+  "version": "0.1.0",
+  "description": "Arct Cloud SDK for Node.js",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "generate": "node scripts/generate.mjs",
+    "generate:check": "node scripts/generate.mjs --check",
+    "build": "tsc",
+    "test": "npm run build && npm run typecheck && node --test test/*.test.mjs",
+    "prepack": "npm run build",
+    "typecheck": "tsc --noEmit --strict --skipLibCheck --target ES2022 --module NodeNext --moduleResolution NodeNext test/public-types.ts",
+    "smoke": "node scripts/smoke.mjs"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "@types/node": "22.18.8"
+  },
+  "license": "MIT"
+}
