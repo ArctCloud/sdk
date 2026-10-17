@@ -2,13 +2,22 @@
 
 [Arct Cloud](https://www.arct.cloud) · [SDK documentation](https://docs.arct.cloud/api-reference/sdks) · [API reference](https://docs.arct.cloud/api-reference/introduction)
 
-Python 3.11+. Preview: `0.1.0rc2`, targeting the Arct Cloud API `/v1`.
+Python 3.11+. Preview: `0.1.0rc3`, targeting the Arct Cloud API `/v1`.
 
 Install the preview:
 
 ```sh
-python3 -m pip install "arct-cloud==0.1.0rc2"
+python3 -m pip install "arct-cloud==0.1.0rc3"
 ```
+
+The package includes the `arct` CLI and `python -m arct`. After installation:
+
+```sh
+arct --version
+python -m arct servers list --output json
+```
+
+For a private macOS/Linux CLI installation, use `curl -fsSL https://raw.githubusercontent.com/ArctCloud/sdk/main/install.sh | sh`, then `export PATH="$HOME/.local/bin:$PATH"` in the current terminal. Existing Go CLI credentials and contexts remain compatible. See the [CLI guide](https://docs.arct.cloud/api-reference/cli) for Windows, updates and commands.
 
 Source and issues: [ArctCloud/sdk](https://github.com/ArctCloud/sdk).
 

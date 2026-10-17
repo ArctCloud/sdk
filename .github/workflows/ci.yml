@@ -71,6 +71,14 @@ jobs:
           npm ci --prefix typescript
           npm test --prefix typescript
           python scripts/release_smoke.py typescript
+      - name: Shell installer
+        if: runner.os != 'Windows'
+        run: |
+          python -m unittest discover -s scripts -p 'install_test.py' -v
+          sh -n install.sh
+          mkdir -p "$RUNNER_TEMP/arct installer home"
+          HOME="$RUNNER_TEMP/arct installer home" SHELL=/bin/bash PIP_FIND_LINKS="$PWD/python/dist" sh install.sh
+          "$RUNNER_TEMP/arct installer home/.local/bin/arct" --version
       - name: Go tests and vet
         working-directory: go
         run: |
@@ -80,4 +88,3 @@ jobs:
         if: runner.os == 'Linux'
         working-directory: go
         run: go test -race ./...
-      - run: python scripts/release_smoke.py cli
