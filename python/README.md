@@ -1,11 +1,13 @@
 # Arct Cloud Python SDK
 
-Python 3.11+. First preview: `0.1.0rc1`, targeting the Arct Cloud API `/v1`.
+[Arct Cloud](https://www.arct.cloud) · [SDK documentation](https://docs.arct.cloud/api-reference/sdks) · [API reference](https://docs.arct.cloud/api-reference/introduction)
+
+Python 3.11+. Preview: `0.1.0rc2`, targeting the Arct Cloud API `/v1`.
 
 Install the preview:
 
 ```sh
-python3 -m pip install "arct-cloud==0.1.0rc1"
+python3 -m pip install "arct-cloud==0.1.0rc2"
 ```
 
 Source and issues: [ArctCloud/sdk](https://github.com/ArctCloud/sdk).

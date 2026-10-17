@@ -1,6 +1,6 @@
 {
   "name": "@arct-cloud/sdk",
-  "version": "0.1.0-rc.2",
+  "version": "0.1.0-rc.3",
   "description": "Arct Cloud SDK for Node.js",
   "type": "module",
   "engines": {
@@ -36,7 +36,7 @@
     "url": "https://github.com/ArctCloud/sdk.git",
     "directory": "typescript"
   },
-  "homepage": "https://github.com/ArctCloud/sdk",
+  "homepage": "https://www.arct.cloud",
   "bugs": {
     "url": "https://github.com/ArctCloud/sdk/issues"
   }

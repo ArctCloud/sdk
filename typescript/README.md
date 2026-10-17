@@ -1,11 +1,13 @@
 # @arct-cloud/sdk
 
-Arct Cloud API `/v1` client for Node.js 22 and newer. ESM JavaScript and TypeScript declarations; native fetch; no runtime dependencies. Preview: `0.1.0-rc.2`. Source and issues: [ArctCloud/sdk](https://github.com/ArctCloud/sdk).
+[Arct Cloud](https://www.arct.cloud) · [SDK documentation](https://docs.arct.cloud/api-reference/sdks) · [API reference](https://docs.arct.cloud/api-reference/introduction)
+
+Arct Cloud API `/v1` client for Node.js 22 and newer. ESM JavaScript and TypeScript declarations; native fetch; no runtime dependencies. Preview: `0.1.0-rc.3`. Source and issues: [ArctCloud/sdk](https://github.com/ArctCloud/sdk).
 
 Install the preview:
 
 ```sh
-npm install --save-exact @arct-cloud/sdk@0.1.0-rc.2
+npm install --save-exact @arct-cloud/sdk@0.1.0-rc.3
 export ARCT_TOKEN=your_dashboard_token
 ```
 

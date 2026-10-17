@@ -1,6 +1,6 @@
 # Releases
 
-The source repository is [ArctCloud/sdk](https://github.com/ArctCloud/sdk). The current previews use Python `0.1.0rc1`, TypeScript `0.1.0-rc.2`, and CLI `0.1.0-rc.2`. The initial CLI `rc.1` workflow was cancelled after CI found a timing-sensitive test fixture; it has no published binaries. Release tags are not moved. Stable 1.0.0 requires the contract and acceptance gates in the [design](superpowers/specs/2026-10-17-sdk-cli-design.md).
+The source repository is [ArctCloud/sdk](https://github.com/ArctCloud/sdk). The current previews use Python `0.1.0rc2`, TypeScript `0.1.0-rc.3`, and CLI `0.1.0-rc.2`. The initial CLI `rc.1` workflow was cancelled after CI found a timing-sensitive test fixture; it has no published binaries. Release tags are not moved. Stable 1.0.0 requires the contract and acceptance gates in the [design](superpowers/specs/2026-10-17-sdk-cli-design.md).
 
 The GitHub release environments are configured with required maintainer review and package-specific tag rules. Registry authentication and trusted-publisher configuration must be verified separately before pushing Python or TypeScript release tags. A repository push alone does not publish a package.
 
@@ -23,7 +23,7 @@ Verify ownership of `arct-cloud` on PyPI. Configure a GitHub trusted publisher w
 
 The [official publication action](https://docs.pypi.org/trusted-publishers/using-a-publisher/) authenticates with the job's short-lived OIDC identity. It uploads wheel and source distributions and [generates PyPI attestations](https://docs.pypi.org/attestations/producing-attestations/). Do not add a PyPI API token to this workflow.
 
-Update `python/pyproject.toml`, `python/src/arct/__init__.py`, and its changelog before tagging. The tag must exactly match the project version, for example `python-v0.1.0rc1` for version `0.1.0rc1` or `python-v0.1.0` for version `0.1.0`.
+Update `python/pyproject.toml`, `python/uv.lock`, `python/src/arct/__init__.py`, and its changelog before tagging. The tag must exactly match the project version, for example `python-v0.1.0rc2` for version `0.1.0rc2` or `python-v0.1.0` for version `0.1.0`.
 
 ## npm
 
@@ -33,7 +33,7 @@ Keep `typescript/package.json`'s `repository.url` set to `https://github.com/Arc
 
 The release workflow uses Node.js 22 and explicitly installs npm 11.5.1, meeting npm's minimum Node.js 22.14.0/npm 11.5.1 requirements. Publication uses OIDC and provenance without `NPM_TOKEN` or `NODE_AUTH_TOKEN`. Once configured, the owner can disable traditional token publishing in npm settings.
 
-Update the package version, lockfile, and changelog before tagging. Tags must match `typescript/package.json`, for example `typescript-v0.1.0-rc.2`. Prereleases use npm's `next` dist-tag; stable versions use `latest`.
+Update the package version, lockfile, and changelog before tagging. Tags must match `typescript/package.json`, for example `typescript-v0.1.0-rc.3`. Prereleases use npm's `next` dist-tag; stable versions use `latest`.
 
 ## Standalone CLI
 
@@ -58,8 +58,8 @@ python3 scripts/release_smoke.py cli
 `scripts/release_check.py` validates a proposed tag locally without publishing:
 
 ```sh
-GITHUB_REF_NAME=python-v0.1.0rc1 python3 scripts/release_check.py python
-GITHUB_REF_NAME=typescript-v0.1.0-rc.2 python3 scripts/release_check.py typescript
+GITHUB_REF_NAME=python-v0.1.0rc2 python3 scripts/release_check.py python
+GITHUB_REF_NAME=typescript-v0.1.0-rc.3 python3 scripts/release_check.py typescript
 GITHUB_REF_NAME=cli-v0.1.0-rc.2 python3 scripts/release_check.py cli
 ```
 
