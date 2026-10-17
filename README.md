@@ -2,11 +2,11 @@
 
 Go CLI, Python SDK, and TypeScript/JavaScript SDK for the [Arct Cloud API](https://docs.arct.cloud/api-reference/introduction).
 
-All clients cover the 22 public operations: account, servers, locations, plans, images, SSH keys, and invoices. This is the first preview release from [ArctCloud/sdk](https://github.com/ArctCloud/sdk).
+All clients cover the 22 public operations: account, servers, locations, plans, images, SSH keys, and invoices. Preview source is available from [ArctCloud/sdk](https://github.com/ArctCloud/sdk). npm and PyPI sign-ins are pending; registry packages are not published yet.
 
 | Package | Preview | Requirements |
 | --- | --- | --- |
-| [Go CLI](go/README.md) | `0.1.0-rc.1` | Standalone executable; Go 1.23+ only for source builds |
+| [Go CLI](go/README.md) | `0.1.0-rc.2` | Standalone executable; Go 1.23+ only for source builds |
 | [Python SDK](python/README.md) | `0.1.0rc1` | Python 3.11+ |
 | [TypeScript SDK](typescript/README.md) | `0.1.0-rc.1` | Node.js 22+ |
 
@@ -16,9 +16,29 @@ Create a token in Dashboard > Settings > API Tokens. API access must be enabled 
 export ARCT_TOKEN="arct_your_token_here"
 ```
 
+## Source checkout
+
+Until release artifacts and registry packages are published, use the public source:
+
+```bash
+git clone https://github.com/ArctCloud/sdk.git
+cd sdk
+```
+
+The source commands below start from this checkout's root.
+
 ## Go CLI
 
-Download the binary for your platform from [CLI preview 0.1.0-rc.1](https://github.com/ArctCloud/sdk/releases/tag/cli-v0.1.0-rc.1), verify it against `SHA256SUMS`, and install it as `arct` on your `PATH`. Linux, macOS and Windows each have amd64 and arm64 assets. See [installation commands](go/README.md#install-the-preview).
+After the CLI release is published, download the binary for your platform from [CLI preview 0.1.0-rc.2](https://github.com/ArctCloud/sdk/releases/tag/cli-v0.1.0-rc.2), verify it against `SHA256SUMS`, and install it as `arct` on your `PATH`. Linux, macOS and Windows each have amd64 and arm64 assets. See [installation commands](go/README.md#install-the-preview).
+
+Build from the checkout now:
+
+```bash
+go -C go build -o ../arct ./cmd/arct
+./arct --version
+```
+
+With the binary installed on your `PATH`:
 
 ```bash
 arct --version
@@ -31,8 +51,16 @@ The CLI supports table and JSON output, named credential contexts, explicit pagi
 
 ## Python
 
+After registry publication:
+
 ```bash
 python3 -m pip install "arct-cloud==0.1.0rc1"
+```
+
+Install from the checkout now:
+
+```bash
+python3 -m pip install ./python
 ```
 
 ```python
@@ -47,11 +75,21 @@ with Arct() as client:
 
 ## TypeScript / JavaScript
 
-Install the exact preview version in your application:
+After registry publication, install the exact preview version in your application:
 
 ```bash
 npm install --save-exact @arct-cloud/sdk@0.1.0-rc.1
 ```
+
+Build a package from the checkout now:
+
+```bash
+cd typescript
+npm ci
+npm pack --pack-destination ..
+```
+
+From your application directory, install the resulting tarball with `npm install --save-exact /path/to/sdk/arct-cloud-sdk-0.1.0-rc.1.tgz`.
 
 ```typescript
 import { Arct } from '@arct-cloud/sdk';

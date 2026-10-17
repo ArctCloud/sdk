@@ -1,6 +1,6 @@
 # Releases
 
-The source repository is [ArctCloud/sdk](https://github.com/ArctCloud/sdk). The first preview uses Python `0.1.0rc1` and TypeScript/CLI `0.1.0-rc.1`. Stable 1.0.0 requires the contract and acceptance gates in the [design](superpowers/specs/2026-10-17-sdk-cli-design.md).
+The source repository is [ArctCloud/sdk](https://github.com/ArctCloud/sdk). The first preview uses Python `0.1.0rc1`, TypeScript `0.1.0-rc.1`, and CLI `0.1.0-rc.2`. The initial CLI `rc.1` workflow was cancelled after CI found a timing-sensitive test fixture; it has no published binaries. Release tags are not moved. Stable 1.0.0 requires the contract and acceptance gates in the [design](superpowers/specs/2026-10-17-sdk-cli-design.md).
 
 The GitHub release environments are configured with required maintainer review and package-specific tag rules. Registry authentication and trusted-publisher configuration must be verified separately before pushing Python or TypeScript release tags. A repository push alone does not publish a package.
 
@@ -35,7 +35,7 @@ Update the package version, lockfile, and changelog before tagging. Tags must ma
 
 ## Standalone CLI
 
-Update `go/VERSION` and the CLI changelog, then use the matching tag, for example `cli-v0.1.0-rc.1`. The CLI's `--version` must agree with `go/VERSION`.
+Update `go/VERSION` and the CLI changelog, then use the matching tag, for example `cli-v0.1.0-rc.2`. The CLI's `--version` must agree with `go/VERSION`.
 
 The build produces six standalone binaries for Linux, macOS, and Windows on amd64/arm64, with CGO disabled, plus `SHA256SUMS`. After the `github-release` environment gate, the temporary repository token creates a GitHub release and attaches these files. Prerelease tags produce GitHub prereleases. The workflow checks that the tag already exists and does not overwrite an existing release. Download the desired binary, compare its SHA-256 with the published checksum, and grant execute permission on Linux/macOS. This does not configure the Go module's public vanity URL or an OS package manager.
 
@@ -58,7 +58,7 @@ python3 scripts/release_smoke.py cli
 ```sh
 GITHUB_REF_NAME=python-v0.1.0rc1 python3 scripts/release_check.py python
 GITHUB_REF_NAME=typescript-v0.1.0-rc.1 python3 scripts/release_check.py typescript
-GITHUB_REF_NAME=cli-v0.1.0-rc.1 python3 scripts/release_check.py cli
+GITHUB_REF_NAME=cli-v0.1.0-rc.2 python3 scripts/release_check.py cli
 ```
 
 Push a reviewed matching tag only after ownership and the appropriate environment and publisher have been configured. Tag pushes trigger publication after checks and the environment gate; no additional workflow dispatch is required.

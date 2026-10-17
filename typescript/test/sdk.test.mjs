@@ -212,7 +212,7 @@ test('wait reports pre-orders, terminal failures, cancellation and resize status
   await assert.rejects(wait, { name: 'AbortError' });
   const resize = client([{ ...quoteBase, pending_resize: null, current_plan: 'vm.medium' }, { ...f.server, plan: 'vm.medium' }]);
   assert.equal((await resize.arct.servers.waitUntil(id, 'running', { plan: 'vm.medium' })).plan, 'vm.medium');
-  const pending = client([{ ...quoteBase, pending_resize: { to_plan: 'vm.medium' }, current_plan: 'vm.medium' }, f.server]);
+  const pending = client(n => n % 2 ? { ...quoteBase, pending_resize: { to_plan: 'vm.medium' }, current_plan: 'vm.medium' } : { ...f.server, plan: 'vm.medium' });
   await assert.rejects(pending.arct.servers.waitUntil(id, 'running', { plan: 'vm.medium', timeoutMs: 20 }), sdk.WaitTimeoutError);
 });
 test('token precedence and HTTPS validation happen locally', async () => {

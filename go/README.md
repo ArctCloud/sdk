@@ -1,25 +1,25 @@
 # Arct Go client and CLI
 
-Standalone CLI for API `/v1`, preview `0.1.0-rc.1`. Go 1.23+ is needed only for source builds. Source and issues: [ArctCloud/sdk](https://github.com/ArctCloud/sdk).
+Standalone CLI for API `/v1`, preview `0.1.0-rc.2`. Go 1.23+ is needed only for source builds. Source and issues: [ArctCloud/sdk](https://github.com/ArctCloud/sdk).
 
 ## Install the preview
 
-The [CLI preview release](https://github.com/ArctCloud/sdk/releases/tag/cli-v0.1.0-rc.1) contains these raw executables and `SHA256SUMS`:
+After [CLI preview 0.1.0-rc.2](https://github.com/ArctCloud/sdk/releases/tag/cli-v0.1.0-rc.2) is published, these raw executables and `SHA256SUMS` will be available. Until then, [build from source](#build-from-source).
 
 | Platform | Architecture | Asset |
 | --- | --- | --- |
-| macOS | Apple Silicon / arm64 | [arct_0.1.0-rc.1_darwin_arm64](https://github.com/ArctCloud/sdk/releases/download/cli-v0.1.0-rc.1/arct_0.1.0-rc.1_darwin_arm64) |
-| macOS | Intel / amd64 | [arct_0.1.0-rc.1_darwin_amd64](https://github.com/ArctCloud/sdk/releases/download/cli-v0.1.0-rc.1/arct_0.1.0-rc.1_darwin_amd64) |
-| Linux | amd64 | [arct_0.1.0-rc.1_linux_amd64](https://github.com/ArctCloud/sdk/releases/download/cli-v0.1.0-rc.1/arct_0.1.0-rc.1_linux_amd64) |
-| Linux | arm64 | [arct_0.1.0-rc.1_linux_arm64](https://github.com/ArctCloud/sdk/releases/download/cli-v0.1.0-rc.1/arct_0.1.0-rc.1_linux_arm64) |
-| Windows | amd64 | [arct_0.1.0-rc.1_windows_amd64.exe](https://github.com/ArctCloud/sdk/releases/download/cli-v0.1.0-rc.1/arct_0.1.0-rc.1_windows_amd64.exe) |
-| Windows | arm64 | [arct_0.1.0-rc.1_windows_arm64.exe](https://github.com/ArctCloud/sdk/releases/download/cli-v0.1.0-rc.1/arct_0.1.0-rc.1_windows_arm64.exe) |
+| macOS | Apple Silicon / arm64 | [arct_0.1.0-rc.2_darwin_arm64](https://github.com/ArctCloud/sdk/releases/download/cli-v0.1.0-rc.2/arct_0.1.0-rc.2_darwin_arm64) |
+| macOS | Intel / amd64 | [arct_0.1.0-rc.2_darwin_amd64](https://github.com/ArctCloud/sdk/releases/download/cli-v0.1.0-rc.2/arct_0.1.0-rc.2_darwin_amd64) |
+| Linux | amd64 | [arct_0.1.0-rc.2_linux_amd64](https://github.com/ArctCloud/sdk/releases/download/cli-v0.1.0-rc.2/arct_0.1.0-rc.2_linux_amd64) |
+| Linux | arm64 | [arct_0.1.0-rc.2_linux_arm64](https://github.com/ArctCloud/sdk/releases/download/cli-v0.1.0-rc.2/arct_0.1.0-rc.2_linux_arm64) |
+| Windows | amd64 | [arct_0.1.0-rc.2_windows_amd64.exe](https://github.com/ArctCloud/sdk/releases/download/cli-v0.1.0-rc.2/arct_0.1.0-rc.2_windows_amd64.exe) |
+| Windows | arm64 | [arct_0.1.0-rc.2_windows_arm64.exe](https://github.com/ArctCloud/sdk/releases/download/cli-v0.1.0-rc.2/arct_0.1.0-rc.2_windows_arm64.exe) |
 
-Download the matching asset and [SHA256SUMS](https://github.com/ArctCloud/sdk/releases/download/cli-v0.1.0-rc.1/SHA256SUMS). For macOS Apple Silicon:
+Download the matching asset and [SHA256SUMS](https://github.com/ArctCloud/sdk/releases/download/cli-v0.1.0-rc.2/SHA256SUMS). For macOS Apple Silicon:
 
 ```sh
-ARCT_ASSET=arct_0.1.0-rc.1_darwin_arm64
-ARCT_RELEASE=https://github.com/ArctCloud/sdk/releases/download/cli-v0.1.0-rc.1
+ARCT_ASSET=arct_0.1.0-rc.2_darwin_arm64
+ARCT_RELEASE=https://github.com/ArctCloud/sdk/releases/download/cli-v0.1.0-rc.2
 curl -fLO "$ARCT_RELEASE/$ARCT_ASSET"
 curl -fLO "$ARCT_RELEASE/SHA256SUMS"
 shasum -a 256 --ignore-missing --check SHA256SUMS
@@ -34,7 +34,7 @@ export PATH="$HOME/.local/bin:$PATH"
 arct --version
 ```
 
-Add that `PATH` export to your shell profile to keep it after restarting the terminal. On Windows, verify the downloaded executable with PowerShell `Get-FileHash .\arct_0.1.0-rc.1_windows_amd64.exe -Algorithm SHA256` (use the arm64 filename when appropriate), compare its hash with the matching `SHA256SUMS` entry, and rename it to `arct.exe`. Place it in a directory such as `%LOCALAPPDATA%\Arct`, add that directory to your user `Path`, and open a new terminal. `arct --version` must print `0.1.0-rc.1`.
+Add that `PATH` export to your shell profile to keep it after restarting the terminal. On Windows, verify the downloaded executable with PowerShell `Get-FileHash .\arct_0.1.0-rc.2_windows_amd64.exe -Algorithm SHA256` (use the arm64 filename when appropriate), compare its hash with the matching `SHA256SUMS` entry, and rename it to `arct.exe`. Place it in a directory such as `%LOCALAPPDATA%\Arct`, add that directory to your user `Path`, and open a new terminal. `arct --version` must print `0.1.0-rc.2`.
 
 ## Build from source
 
