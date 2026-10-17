@@ -2,13 +2,13 @@
 
 Go CLI, Python SDK, and TypeScript/JavaScript SDK for the [Arct Cloud API](https://docs.arct.cloud/api-reference/introduction).
 
-All clients cover the 22 public operations: account, servers, locations, plans, images, SSH keys, and invoices. The packages are being prepared for their first release; the commands below install from this checkout.
+All clients cover the 22 public operations: account, servers, locations, plans, images, SSH keys, and invoices. This is the first preview release from [ArctCloud/sdk](https://github.com/ArctCloud/sdk).
 
-| Package | Interface | Requirements |
+| Package | Preview | Requirements |
 | --- | --- | --- |
-| [Go CLI](go/README.md) | `arct` | Standalone executable; Go 1.23+ to build locally |
-| [Python SDK](python/README.md) | `from arct import Arct, AsyncArct` | Python 3.11+ |
-| [TypeScript SDK](typescript/README.md) | `import { Arct } from '@arct-cloud/sdk'` | Node.js 22+ |
+| [Go CLI](go/README.md) | `0.1.0-rc.1` | Standalone executable; Go 1.23+ only for source builds |
+| [Python SDK](python/README.md) | `0.1.0rc1` | Python 3.11+ |
+| [TypeScript SDK](typescript/README.md) | `0.1.0-rc.1` | Node.js 22+ |
 
 Create a token in Dashboard > Settings > API Tokens. API access must be enabled on your account. Use read-only tokens for read-only jobs; keep tokens out of browser code and source control.
 
@@ -18,21 +18,21 @@ export ARCT_TOKEN="arct_your_token_here"
 
 ## Go CLI
 
+Download the binary for your platform from [CLI preview 0.1.0-rc.1](https://github.com/ArctCloud/sdk/releases/tag/cli-v0.1.0-rc.1), verify it against `SHA256SUMS`, and install it as `arct` on your `PATH`. Linux, macOS and Windows each have amd64 and arm64 assets. See [installation commands](go/README.md#install-the-preview).
+
 ```bash
-cd go
-go build -o arct ./cmd/arct
-./arct --help
-./arct account get
-./arct servers list --output json
-./arct plans list --location fra
+arct --version
+arct account get
+arct servers list --output json
+arct plans list --location fra
 ```
 
-The CLI supports table and JSON output, named credential contexts, explicit pagination, operation waiting, and noninteractive use. Commands that charge a card or delete/reinstall a server require confirmation; `--yes` is the explicit automation option. See the package README for all commands and flags.
+The CLI supports table and JSON output, named credential contexts, explicit pagination, operation waiting, and noninteractive use. Commands that charge a card or delete/reinstall a server require confirmation; `--yes` is the explicit automation option. See the package README for all commands and flags. Source builds are also supported; public vanity hosting for `arct.cloud/sdk/go` is not configured.
 
 ## Python
 
 ```bash
-python3 -m pip install ./python
+python3 -m pip install "arct-cloud==0.1.0rc1"
 ```
 
 ```python
@@ -47,12 +47,10 @@ with Arct() as client:
 
 ## TypeScript / JavaScript
 
-Build and pack the SDK, then install the resulting tarball in your application:
+Install the exact preview version in your application:
 
 ```bash
-cd typescript
-npm ci
-npm pack
+npm install --save-exact @arct-cloud/sdk@0.1.0-rc.1
 ```
 
 ```typescript
@@ -89,4 +87,4 @@ make build
 
 The snapshot and explicit compatibility overlay live in [api/](api/contract-notes.md). Outstanding upstream schema issues are recorded there; they must be confirmed before declaring stable backend compatibility. Each package documents its generator adaptations.
 
-See [release setup](docs/releasing.md) for CI, trusted publishing, tag conventions, and binary distribution. Registry ownership, trusted-publisher setup and public Go module hosting are external release prerequisites. The local module path is not a claim that vanity hosting is configured.
+See [release setup](docs/releasing.md) for CI, trusted publishing, tag conventions, and binary distribution. Registry sign-in and trusted-publisher setup must be completed before publication. The Go client currently uses a local module path; public vanity hosting is not configured.

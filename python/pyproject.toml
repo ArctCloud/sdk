@@ -4,12 +4,18 @@ build-backend = "hatchling.build"
 
 [project]
 name = "arct-cloud"
-version = "0.1.0"
+version = "0.1.0rc1"
 description = "Synchronous and asynchronous Arct Cloud API clients"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = ["httpx>=0.28,<1", "pydantic>=2.11,<3"]
 license = "MIT"
+
+[project.urls]
+Homepage = "https://github.com/ArctCloud/sdk"
+Documentation = "https://docs.arct.cloud/api-reference/introduction"
+Repository = "https://github.com/ArctCloud/sdk"
+Issues = "https://github.com/ArctCloud/sdk/issues"
 
 [project.optional-dependencies]
 test = ["pytest>=8", "pytest-asyncio>=0.24", "respx>=0.22", "build>=1.2"]

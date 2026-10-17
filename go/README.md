@@ -1,6 +1,44 @@
 # Arct Go client and CLI
 
-Go 1.23+, API `/v1`, version 0.1.0. Build locally; the vanity module and public binaries are not published.
+Standalone CLI for API `/v1`, preview `0.1.0-rc.1`. Go 1.23+ is needed only for source builds. Source and issues: [ArctCloud/sdk](https://github.com/ArctCloud/sdk).
+
+## Install the preview
+
+The [CLI preview release](https://github.com/ArctCloud/sdk/releases/tag/cli-v0.1.0-rc.1) contains these raw executables and `SHA256SUMS`:
+
+| Platform | Architecture | Asset |
+| --- | --- | --- |
+| macOS | Apple Silicon / arm64 | [arct_0.1.0-rc.1_darwin_arm64](https://github.com/ArctCloud/sdk/releases/download/cli-v0.1.0-rc.1/arct_0.1.0-rc.1_darwin_arm64) |
+| macOS | Intel / amd64 | [arct_0.1.0-rc.1_darwin_amd64](https://github.com/ArctCloud/sdk/releases/download/cli-v0.1.0-rc.1/arct_0.1.0-rc.1_darwin_amd64) |
+| Linux | amd64 | [arct_0.1.0-rc.1_linux_amd64](https://github.com/ArctCloud/sdk/releases/download/cli-v0.1.0-rc.1/arct_0.1.0-rc.1_linux_amd64) |
+| Linux | arm64 | [arct_0.1.0-rc.1_linux_arm64](https://github.com/ArctCloud/sdk/releases/download/cli-v0.1.0-rc.1/arct_0.1.0-rc.1_linux_arm64) |
+| Windows | amd64 | [arct_0.1.0-rc.1_windows_amd64.exe](https://github.com/ArctCloud/sdk/releases/download/cli-v0.1.0-rc.1/arct_0.1.0-rc.1_windows_amd64.exe) |
+| Windows | arm64 | [arct_0.1.0-rc.1_windows_arm64.exe](https://github.com/ArctCloud/sdk/releases/download/cli-v0.1.0-rc.1/arct_0.1.0-rc.1_windows_arm64.exe) |
+
+Download the matching asset and [SHA256SUMS](https://github.com/ArctCloud/sdk/releases/download/cli-v0.1.0-rc.1/SHA256SUMS). For macOS Apple Silicon:
+
+```sh
+ARCT_ASSET=arct_0.1.0-rc.1_darwin_arm64
+ARCT_RELEASE=https://github.com/ArctCloud/sdk/releases/download/cli-v0.1.0-rc.1
+curl -fLO "$ARCT_RELEASE/$ARCT_ASSET"
+curl -fLO "$ARCT_RELEASE/SHA256SUMS"
+shasum -a 256 --ignore-missing --check SHA256SUMS
+```
+
+Confirm the downloaded filename is reported `OK` before installing. On Linux, select its filename from the table and use `sha256sum --ignore-missing --check SHA256SUMS` instead.
+
+```sh
+mkdir -p "$HOME/.local/bin"
+install -m 755 "$ARCT_ASSET" "$HOME/.local/bin/arct"
+export PATH="$HOME/.local/bin:$PATH"
+arct --version
+```
+
+Add that `PATH` export to your shell profile to keep it after restarting the terminal. On Windows, verify the downloaded executable with PowerShell `Get-FileHash .\arct_0.1.0-rc.1_windows_amd64.exe -Algorithm SHA256` (use the arm64 filename when appropriate), compare its hash with the matching `SHA256SUMS` entry, and rename it to `arct.exe`. Place it in a directory such as `%LOCALAPPDATA%\Arct`, add that directory to your user `Path`, and open a new terminal. `arct --version` must print `0.1.0-rc.1`.
+
+## Build from source
+
+From this repository's checkout:
 
 ```sh
 cd go
@@ -14,6 +52,11 @@ export ARCT_TOKEN='your-dashboard-created-token'
 arct account get
 arct servers list --output json
 arct servers list --location fra --all --columns id,hostname,status
+```
+
+The following examples can charge a card, destroy data or change billing. `--yes` explicitly confirms each mutation:
+
+```sh
 arct servers create --hostname web-1 --location fra --plan vm.small --image IMAGE_UUID --ssh-key KEY_UUID --yes --wait
 arct servers resize-options SERVER_UUID
 arct servers resize SERVER_UUID --plan vm.medium --expected-amount 4.12 --yes
@@ -44,7 +87,7 @@ Default lists request one page with API defaults. `--all` emits an array; page J
 
 `--wait` supports create/start/stop/restart/reinstall/resize/immediate-delete. Default polling is 5 seconds; default waiting deadline is 600 seconds. `--timeout 30s` or `--timeout 30` changes that deadline. Accepted operations continue after interruption or timeout. Restart/reinstall require an observed transition to avoid accepting stale `running` data. Resize waits for no pending resize and the requested final plan; it never stops or starts a server. Pending payment is reported explicitly. Pre-orders may exceed the deadline.
 
-Create/reinstall results retain their original order/password alongside `final_server`. Waiting failures also print the original result with `wait_error` and exit nonzero. Passwords are redacted unless `--show-password` explicitly opts in on create/reinstall; this also applies after waiting fails. Tokens remain redacted. Capture any revealed one-time password securely.
+After a successful server wait, table output shows the final server fields and preserves order/password details. JSON retains the original response alongside `final_server`. Waiting failures print the original result with `wait_error` and exit nonzero. Passwords are redacted unless `--show-password` explicitly opts in on create/reinstall; this also applies after waiting fails. Tokens remain redacted. Capture any revealed one-time password securely.
 
 Exit codes: 0 success/accepted, 1 API/network failure, 2 invalid input/missing confirmation, 3 timeout/uncertain outcome/unknown charge, 130 interruption. JSON errors are structured on stderr; progress can precede them.
 
@@ -64,6 +107,8 @@ Login validates an existing dashboard token; tokens are read from `ARCT_TOKEN` o
 Production uses `https://api.arct.cloud/v1`. `--base-url` or `ARCT_BASE_URL` selects another HTTPS endpoint; plain HTTP is allowed only for explicit localhost tests. Redirects are rejected. Prefer read-only tokens for reads. Token issuance/revocation, cards, invoice payment, password resets, backup/snapshot management, VNC and crypto payments remain dashboard operations.
 
 ## Go client
+
+Public vanity hosting for `arct.cloud/sdk/go` is not configured. Use the client from this checkout or a local Go module `replace` directive; there is no supported public `go get` installation yet.
 
 ```go
 package main

@@ -118,6 +118,71 @@ func TestWaitOutputAndColumns(t *testing.T) {
 		t.Fatalf("%d %d %s %s", code, calls, out, errOut)
 	}
 }
+
+func TestWaitDisplaysFinalServer(t *testing.T) {
+	for _, tc := range []struct{ action, initial, final string }{
+		{"stop", "running", "stopped"},
+		{"start", "stopped", "running"},
+		{"restart", "restarting", "running"},
+	} {
+		for _, output := range []string{"table", "json"} {
+			t.Run(tc.action+"/"+output, func(t *testing.T) {
+				a, out, errOut := appTest(t, func(w http.ResponseWriter, r *http.Request) {
+					if r.Method == "POST" {
+						fmt.Fprintf(w, `{"id":%q,"hostname":"initial","status":%q}`, id, tc.initial)
+					} else {
+						fmt.Fprintf(w, `{"id":%q,"hostname":"current","status":%q}`, id, tc.final)
+					}
+				})
+				if code := a.Run(context.Background(), []string{"servers", tc.action, id, "--wait", "--output", output}); code != 0 {
+					t.Fatalf("exit=%d stderr=%s", code, errOut)
+				}
+				if output == "json" {
+					var value map[string]any
+					if err := json.Unmarshal(out.Bytes(), &value); err != nil {
+						t.Fatal(err)
+					}
+					final, ok := value["final_server"].(map[string]any)
+					if !ok || value["status"] != tc.initial || final["status"] != tc.final {
+						t.Fatalf("lost original or final response: %s", out)
+					}
+				} else if got, want := strings.Join(strings.Fields(out.String()), " "), "hostname current id "+id+" status "+tc.final; got != want {
+					t.Fatalf("got %q; want %q", got, want)
+				}
+			})
+		}
+	}
+}
+
+func TestWaitTableKeepsCreationDetails(t *testing.T) {
+	for _, showPassword := range []bool{false, true} {
+		t.Run(fmt.Sprint(showPassword), func(t *testing.T) {
+			a, out, errOut := appTest(t, func(w http.ResponseWriter, r *http.Request) {
+				if r.Method == "POST" {
+					fmt.Fprint(w, `{"order":{"id":"order","server_id":"`+id+`"},"server":{"id":"`+id+`","status":"provisioning"},"password":"one-time"}`)
+				} else {
+					fmt.Fprint(w, `{"id":"`+id+`","status":"running"}`)
+				}
+			})
+			args := []string{"servers", "create", "--hostname", "web", "--location", "fra", "--plan", "small", "--image", id, "--yes", "--wait"}
+			if showPassword {
+				args = append(args, "--show-password")
+			}
+			if code := a.Run(context.Background(), args); code != 0 {
+				t.Fatalf("exit=%d stderr=%s", code, errOut)
+			}
+			password := "[REDACTED]"
+			if showPassword {
+				password = "one-time"
+			}
+			want := "id " + id + ` order {"id":"order","server_id":"` + id + `"} password ` + password + " status running"
+			if got := strings.Join(strings.Fields(out.String()), " "); got != want {
+				t.Fatalf("got %q; want %q", got, want)
+			}
+		})
+	}
+}
+
 func TestLocalContexts(t *testing.T) {
 	a, out, errOut := appTest(t, func(w http.ResponseWriter, r *http.Request) { fmt.Fprint(w, `{"id":"account"}`) })
 	for _, args := range [][]string{{"auth", "login", "--context", "work"}, {"context", "list"}, {"context", "use", "work"}, {"auth", "status"}, {"auth", "logout", "--context", "work"}} {

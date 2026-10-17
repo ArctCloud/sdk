@@ -1,6 +1,10 @@
 # Releases
 
-The workflows are prepared for publication; no registry ownership, trusted publisher, hosted repository, or release environment has been configured by this project. Package names remain provisional until their owners verify them. Start with a prerelease. Stable 1.0.0 requires the contract and acceptance gates in the [design](superpowers/specs/2026-10-17-sdk-cli-design.md).
+The source repository is [ArctCloud/sdk](https://github.com/ArctCloud/sdk). The first preview uses Python `0.1.0rc1` and TypeScript/CLI `0.1.0-rc.1`. Stable 1.0.0 requires the contract and acceptance gates in the [design](superpowers/specs/2026-10-17-sdk-cli-design.md).
+
+The GitHub release environments are configured with required maintainer review and package-specific tag rules. Registry authentication and trusted-publisher configuration must be verified separately before pushing Python or TypeScript release tags. A repository push alone does not publish a package.
+
+The organization currently disables pull-request creation by GitHub Actions. Specification drift checks can run, but automated update PRs require that organization setting to be enabled by an owner.
 
 ## Repository setup
 
@@ -13,7 +17,7 @@ Every release calls the complete reusable CI workflow at its tagged commit. Gene
 
 ## PyPI
 
-Verify ownership of `arct-cloud` on PyPI. Configure a GitHub trusted publisher for the repository owner, repository name, workflow filename `release.yml`, and environment `pypi`. A [pending publisher](https://docs.pypi.org/trusted-publishers/creating-a-project-through-oidc/) can create a new project through its first authorized release. PyPI and TestPyPI have separate publisher configurations; this workflow targets production PyPI.
+Verify ownership of `arct-cloud` on PyPI. Configure a GitHub trusted publisher with owner `ArctCloud`, repository `sdk`, workflow filename `release.yml`, and environment `pypi`. A [pending publisher](https://docs.pypi.org/trusted-publishers/creating-a-project-through-oidc/) can create a new project through its first authorized release. PyPI and TestPyPI have separate publisher configurations; this workflow targets production PyPI.
 
 The [official publication action](https://docs.pypi.org/trusted-publishers/using-a-publisher/) authenticates with the job's short-lived OIDC identity. It uploads wheel and source distributions and [generates PyPI attestations](https://docs.pypi.org/attestations/producing-attestations/). Do not add a PyPI API token to this workflow.
 
@@ -23,7 +27,7 @@ Update `python/pyproject.toml`, `python/src/arct/__init__.py`, and its changelog
 
 Verify ownership of the `@arct-cloud` organization and `@arct-cloud/sdk` package. If the package does not yet exist, its owner must arrange its first publication separately before configuring a trusted publisher through package settings; these workflows do not reserve package names. Do not publish a placeholder to establish ownership.
 
-Set `typescript/package.json`'s `repository.url` to the exact `https://github.com/OWNER/REPOSITORY.git` publishing repository URL; the release build verifies it. npm provenance requires a public source repository and public package. Configure the package's GitHub trusted publisher with the exact owner, repository, workflow filename `release.yml`, and environment `npm`, allowing direct `npm publish`. Current npm configurations must complete their first successful publication within two days or be recreated. See [npm's trusted-publisher requirements](https://docs.npmjs.com/trusted-publishers/).
+Keep `typescript/package.json`'s `repository.url` set to `https://github.com/ArctCloud/sdk.git`; the release build verifies it. npm provenance requires a public source repository and public package. Configure the package's GitHub trusted publisher with owner `ArctCloud`, repository `sdk`, workflow filename `release.yml`, and environment `npm`, allowing direct `npm publish`. Current npm configurations must complete their first successful publication within two days or be recreated. See [npm's trusted-publisher requirements](https://docs.npmjs.com/trusted-publishers/).
 
 The release workflow uses Node.js 22 and explicitly installs npm 11.5.1, meeting npm's minimum Node.js 22.14.0/npm 11.5.1 requirements. Publication uses OIDC and provenance without `NPM_TOKEN` or `NODE_AUTH_TOKEN`. Once configured, the owner can disable traditional token publishing in npm settings.
 
@@ -52,9 +56,9 @@ python3 scripts/release_smoke.py cli
 `scripts/release_check.py` validates a proposed tag locally without publishing:
 
 ```sh
-GITHUB_REF_NAME=python-v0.1.0 python3 scripts/release_check.py python
-GITHUB_REF_NAME=typescript-v0.1.0 python3 scripts/release_check.py typescript
-GITHUB_REF_NAME=cli-v0.1.0 python3 scripts/release_check.py cli
+GITHUB_REF_NAME=python-v0.1.0rc1 python3 scripts/release_check.py python
+GITHUB_REF_NAME=typescript-v0.1.0-rc.1 python3 scripts/release_check.py typescript
+GITHUB_REF_NAME=cli-v0.1.0-rc.1 python3 scripts/release_check.py cli
 ```
 
 Push a reviewed matching tag only after ownership and the appropriate environment and publisher have been configured. Tag pushes trigger publication after checks and the environment gate; no additional workflow dispatch is required.

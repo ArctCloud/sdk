@@ -1,27 +1,26 @@
 # Arct Cloud Python SDK
 
-Python 3.11+. Install with `pip install arct-cloud`. Version 0.1.0 is an initial release; the package name remains provisional until registry ownership is verified. SDK 1.x targets API `/v1`.
+Python 3.11+. First preview: `0.1.0rc1`, targeting the Arct Cloud API `/v1`.
+
+```sh
+python3 -m pip install "arct-cloud==0.1.0rc1"
+```
+
+Source and issues: [ArctCloud/sdk](https://github.com/ArctCloud/sdk).
 
 Set `ARCT_TOKEN` to a dashboard-created API token. Prefer a read token for read-only work; mutations require `read_write`. An explicit `token=` overrides the environment. Missing credentials fail before a request.
 
 ```python
-from pathlib import Path
 from arct import Arct
 
 with Arct() as client:
-    key = client.ssh_keys.create(
-        name="laptop", public_key=Path.home().joinpath(".ssh/id_ed25519.pub").read_text()
-    )
-    image = next(i for i in client.images.list(location="fra") if "ubuntu" in i.name.lower())
-    result = client.servers.create(
-        hostname="web-1", location="fra", plan="vm.small",
-        image_id=image.id, ssh_key_ids=[key.id],
-    )
-    server = client.servers.wait_until(result, "running")
-    print(f"ssh {server.login_user}@{server.ipv4}")
+    account = client.account.get()
+    print(account.id)
+    for server in client.servers.list():
+        print(server.hostname, server.status)
 ```
 
-Creating a server charges the saved card. Backups, coupons, and billing period affect the charge; no create quote endpoint exists. SDK methods never prompt. Run the printed native SSH command yourself.
+Creating or resizing a server can charge the saved card. Backups, coupons, and billing period affect the charge; no create quote endpoint exists. SDK methods never prompt.
 
 ```python
 import asyncio

@@ -585,6 +585,13 @@ func (a *App) render(result any, f *flags) error {
 	case []any:
 		rows = x
 	case map[string]any:
+		if final, ok := x["final_server"].(map[string]any); ok {
+			delete(x, "final_server")
+			delete(x, "server")
+			for key, value := range final {
+				x[key] = value
+			}
+		}
 		if data, ok := x["data"].([]any); ok {
 			rows = data
 		} else {
