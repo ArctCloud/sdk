@@ -15,9 +15,6 @@ def check(package, tag, root=ROOT):
     elif package == "typescript":
         version = json.loads((root / "typescript/package.json").read_text())["version"]
         pattern = r"\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?"
-    elif package == "cli":
-        version = (root / "go/VERSION").read_text().strip()
-        pattern = r"\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?"
     else:
         raise ValueError("Unknown package")
     if not re.fullmatch(pattern, version) or tag != f"{package}-v{version}":
@@ -27,7 +24,7 @@ def check(package, tag, root=ROOT):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("package", choices=["python", "typescript", "cli"])
+    parser.add_argument("package", choices=["python", "typescript"])
     args = parser.parse_args()
     try:
         print(check(args.package, os.environ.get("GITHUB_REF_NAME", "")))

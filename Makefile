@@ -33,6 +33,5 @@ build:
 	mkdir -p build
 	cd python && uv build
 	cd typescript && npm pack --pack-destination ../build
-	cd go && go build -trimpath -o ../build/arct ./cmd/arct
 
 check: generate-check test

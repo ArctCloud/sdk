@@ -19,7 +19,6 @@ class ReleaseChecks(unittest.TestCase):
             for package, filename, content, version in (
                 ("python", "python/pyproject.toml", '[project]\nversion = "0.1.0rc1"\n', "0.1.0rc1"),
                 ("typescript", "typescript/package.json", '{"version":"0.1.0-rc.1"}', "0.1.0-rc.1"),
-                ("cli", "go/VERSION", "0.1.0\n", "0.1.0"),
             ):
                 path = root / filename
                 path.parent.mkdir(parents=True, exist_ok=True)

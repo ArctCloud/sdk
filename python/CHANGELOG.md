@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.0rc3 (preview)
+
+- Add the `arct` command and `python -m arct`, reusing the Python SDK and existing credential contexts.
+- Add a repository-hosted shell installer for macOS and Linux; replace Go CLI binary distribution.
+
 ## 0.1.0rc2 (preview)
 
 Add Arct Cloud website and documentation links to the package page. SDK runtime behavior is unchanged.

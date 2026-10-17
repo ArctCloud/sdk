@@ -1,112 +1,12 @@
-# Arct Go client and CLI
+# Arct Cloud Go client
 
-Standalone CLI for API `/v1`, preview `0.1.0-rc.2`. Go 1.23+ is needed only for source builds. Source and issues: [ArctCloud/sdk](https://github.com/ArctCloud/sdk).
+[Arct Cloud](https://www.arct.cloud) · [API reference](https://docs.arct.cloud/api-reference/introduction) · [SDK source](https://github.com/ArctCloud/sdk)
 
-## Install the preview
+Go 1.23+ client for all 22 public API operations under `/v1`. Set `ARCT_TOKEN` to a dashboard-created API token; prefer read-only tokens for queries. Creating or resizing servers can charge the saved card. Client methods do not prompt.
 
-Download these raw executables and `SHA256SUMS` from [CLI preview 0.1.0-rc.2](https://github.com/ArctCloud/sdk/releases/tag/cli-v0.1.0-rc.2), or [build from source](#build-from-source).
+For terminal commands, install the Python-based [Arct CLI](../docs/cli.md). Historical Go CLI releases remain available; this package retains the Go API client and its tests.
 
-| Platform | Architecture | Asset |
-| --- | --- | --- |
-| macOS | Apple Silicon / arm64 | [arct_0.1.0-rc.2_darwin_arm64](https://github.com/ArctCloud/sdk/releases/download/cli-v0.1.0-rc.2/arct_0.1.0-rc.2_darwin_arm64) |
-| macOS | Intel / amd64 | [arct_0.1.0-rc.2_darwin_amd64](https://github.com/ArctCloud/sdk/releases/download/cli-v0.1.0-rc.2/arct_0.1.0-rc.2_darwin_amd64) |
-| Linux | amd64 | [arct_0.1.0-rc.2_linux_amd64](https://github.com/ArctCloud/sdk/releases/download/cli-v0.1.0-rc.2/arct_0.1.0-rc.2_linux_amd64) |
-| Linux | arm64 | [arct_0.1.0-rc.2_linux_arm64](https://github.com/ArctCloud/sdk/releases/download/cli-v0.1.0-rc.2/arct_0.1.0-rc.2_linux_arm64) |
-| Windows | amd64 | [arct_0.1.0-rc.2_windows_amd64.exe](https://github.com/ArctCloud/sdk/releases/download/cli-v0.1.0-rc.2/arct_0.1.0-rc.2_windows_amd64.exe) |
-| Windows | arm64 | [arct_0.1.0-rc.2_windows_arm64.exe](https://github.com/ArctCloud/sdk/releases/download/cli-v0.1.0-rc.2/arct_0.1.0-rc.2_windows_arm64.exe) |
-
-Download the matching asset and [SHA256SUMS](https://github.com/ArctCloud/sdk/releases/download/cli-v0.1.0-rc.2/SHA256SUMS). For macOS Apple Silicon:
-
-```sh
-ARCT_ASSET=arct_0.1.0-rc.2_darwin_arm64
-ARCT_RELEASE=https://github.com/ArctCloud/sdk/releases/download/cli-v0.1.0-rc.2
-curl -fLO "$ARCT_RELEASE/$ARCT_ASSET"
-curl -fLO "$ARCT_RELEASE/SHA256SUMS"
-shasum -a 256 --ignore-missing --check SHA256SUMS
-```
-
-Confirm the downloaded filename is reported `OK` before installing. On Linux, select its filename from the table and use `sha256sum --ignore-missing --check SHA256SUMS` instead.
-
-```sh
-mkdir -p "$HOME/.local/bin"
-install -m 755 "$ARCT_ASSET" "$HOME/.local/bin/arct"
-export PATH="$HOME/.local/bin:$PATH"
-arct --version
-```
-
-Add that `PATH` export to your shell profile to keep it after restarting the terminal. On Windows, verify the downloaded executable with PowerShell `Get-FileHash .\arct_0.1.0-rc.2_windows_amd64.exe -Algorithm SHA256` (use the arm64 filename when appropriate), compare its hash with the matching `SHA256SUMS` entry, and rename it to `arct.exe`. Place it in a directory such as `%LOCALAPPDATA%\Arct`, add that directory to your user `Path`, and open a new terminal. `arct --version` must print `0.1.0-rc.2`.
-
-## Build from source
-
-From this repository's checkout:
-
-```sh
-cd go
-go build -o arct ./cmd/arct
-./arct --version
-./arct --help
-```
-
-```sh
-export ARCT_TOKEN='your-dashboard-created-token'
-arct account get
-arct servers list --output json
-arct servers list --location fra --all --columns id,hostname,status
-```
-
-The following examples can charge a card, destroy data or change billing. `--yes` explicitly confirms each mutation:
-
-```sh
-arct servers create --hostname web-1 --location fra --plan vm.small --image IMAGE_UUID --ssh-key KEY_UUID --yes --wait
-arct servers resize-options SERVER_UUID
-arct servers resize SERVER_UUID --plan vm.medium --expected-amount 4.12 --yes
-arct servers delete SERVER_UUID --at-period-end --yes
-arct servers cancel-deletion SERVER_UUID --yes
-```
-
-Command IDs must be UUIDs; replace the example placeholders. All 22 API operations are available under `account`, `servers`, `locations`, `plans`, `images`, `ssh-keys`, and `invoices`. `arct RESOURCE ACTION --help` lists applicable flags.
-
-| Command | Request controls |
-| --- | --- |
-| `servers list` | `--status`, `--location` |
-| `plans list`, `images list` | `--location` |
-| Every API `list` | `--page`, `--per-page`, `--all` |
-| `servers create` | `--hostname`, `--location`, `--plan`, `--image`, `--billing-period`, repeated `--ssh-key`, `--coupon-code` or `--coupon-code-null`, `--enable-backups[=false]` |
-| `servers update ID` | `--hostname`, `--delete-protection[=false]`, repeated `--label` |
-| `servers delete ID` | `--at-period-end[=false]`, `--yes`, immediate deletion supports `--wait` |
-| `servers reinstall ID` | `--image`, `--hostname`, repeated `--ssh-key`, `--yes` |
-| `servers resize ID` | `--plan`, `--expected-amount`, `--yes` |
-| `ssh-keys create` | `--name`, `--public-key` or `--public-key-file PATH` (`-` reads stdin) |
-| `servers wait ID` | `--status`, `--timeout` |
-
-`servers get/start/stop/restart/resize-options/cancel-deletion`, `account get`, `ssh-keys list/get/delete`, `locations list`, and `invoices list/get` complete the operation set. Delete, reinstall, resize, creation and cancellation of scheduled deletion require confirmation; pass `--yes` in automation. SSH key creation and state actions remain scriptable.
-
-Use `--ssh-key ''` for an explicit empty SSH-key array (password installation), and `--label ''` to clear labels. Omitted arrays remain omitted. Boolean false requires `--enable-backups=false` or `--delete-protection=false`. Label requests retain the contract's maximum of 100; upstream prose says 10 and needs clarification.
-
-Default lists request one page with API defaults. `--all` emits an array; page JSON retains `data` and `pagination`. `--output json` emits complete results with redacted secrets. Table output supports `--columns id,hostname,status` and `--no-header`. Prompts, progress, billing information and errors use stderr.
-
-`--wait` supports create/start/stop/restart/reinstall/resize/immediate-delete. Default polling is 5 seconds; default waiting deadline is 600 seconds. `--timeout 30s` or `--timeout 30` changes that deadline. Accepted operations continue after interruption or timeout. Restart/reinstall require an observed transition to avoid accepting stale `running` data. Resize waits for no pending resize and the requested final plan; it never stops or starts a server. Pending payment is reported explicitly. Pre-orders may exceed the deadline.
-
-After a successful server wait, table output shows the final server fields and preserves order/password details. JSON retains the original response alongside `final_server`. Waiting failures print the original result with `wait_error` and exit nonzero. Passwords are redacted unless `--show-password` explicitly opts in on create/reinstall; this also applies after waiting fails. Tokens remain redacted. Capture any revealed one-time password securely.
-
-Exit codes: 0 success/accepted, 1 API/network failure, 2 invalid input/missing confirmation, 3 timeout/uncertain outcome/unknown charge, 130 interruption. JSON errors are structured on stderr; progress can precede them.
-
-## Local credentials
-
-```sh
-arct auth login --context production
-arct auth status
-arct context list
-arct context use production
-arct auth logout --context production
-arct context delete production
-```
-
-Login validates an existing dashboard token; tokens are read from `ARCT_TOKEN` or stdin (hidden on a terminal). Token command-line flags are unsupported. Logout removes local credentials without remotely revoking the token. `ARCT_TOKEN` overrides saved credentials; `--context NAME` selects a saved context. Configuration uses the OS user configuration directory (`$XDG_CONFIG_HOME/arct/config.json` where set). POSIX credentials use file0600/directory0700. Windows uses a protected DACL granting only the current user and SYSTEM; unsupported ACL enforcement fails before writing credentials.
-
-Production uses `https://api.arct.cloud/v1`. `--base-url` or `ARCT_BASE_URL` selects another HTTPS endpoint; plain HTTP is allowed only for explicit localhost tests. Redirects are rejected. Prefer read-only tokens for reads. Token issuance/revocation, cards, invoice payment, password resets, backup/snapshot management, VNC and crypto payments remain dashboard operations.
-
-## Go client
+## Usage
 
 Public vanity hosting for `arct.cloud/sdk/go` is not configured. Use the client from this checkout or a local Go module `replace` directive; there is no supported public `go get` installation yet.
 
@@ -151,4 +51,4 @@ go vet ./...
 
 Run generation from the repository root. The shared bootstrap verifies OpenAPI Generator7.26.0 by SHA256. A temporary compatibility document converts nullable OpenAPI3.1 unions to3.0.3 and uses open JSON request/response envelopes for generated transport; original model schemas remain generated. This preserves unset/null/empty distinctions, unknown response values and exact monetary tokens in the policy facade. No generated files are patched. `--check` compares bytes and the complete generated file set without replacing checked-in output.
 
-Use `CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build ./cmd/arct` for cross-compilation; Linux/macOS/Windows amd64/arm64 are supported build targets. Non-native executables require their platform for runtime validation. The API overlay and unresolved backend issues are documented in `../api/contract-notes.md`. No tests perform live mutations.
+The API overlay and unresolved backend issues are documented in `../api/contract-notes.md`. No tests perform live mutations.
