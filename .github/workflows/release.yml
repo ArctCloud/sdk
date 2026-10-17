@@ -130,7 +130,7 @@ jobs:
         run: |
           npm_tag=latest
           if [ "$IS_PRERELEASE" = true ]; then npm_tag=next; fi
-          npm publish dist/*.tgz --access public --provenance --ignore-scripts --tag "$npm_tag"
+          npm publish ./dist/*.tgz --access public --provenance --ignore-scripts --tag "$npm_tag"
 
   cli-build:
     needs: [version, checks]
