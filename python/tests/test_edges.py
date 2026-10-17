@@ -3,6 +3,7 @@ from collections import deque
 from datetime import datetime, timezone
 import json
 import time
+from types import SimpleNamespace
 
 import httpx
 import pytest
@@ -140,18 +141,23 @@ async def test_async_wait_is_cancellable_and_deadline_bounded():
     value = server()
     value["status"] = "provisioning"
     calls = []
+    entered = asyncio.Event()
     async def handle(r):
         calls.append(r)
+        entered.set()
         return httpx.Response(200, json=value)
     async with AsyncArct(token="token", transport=httpx.MockTransport(handle)) as c:
         task = asyncio.create_task(c.servers.wait_until(ID, "running"))
-        await asyncio.sleep(0.01)
+        await asyncio.wait_for(entered.wait(), timeout=1)
         task.cancel()
         with pytest.raises(asyncio.CancelledError):
             await task
         assert len(calls) == 1
+        last = await c.servers.get(ID)
+        before = time.monotonic()
         with pytest.raises(WaitTimeoutError) as error:
-            await c.servers.wait_until(ID, "running", timeout=0.01)
+            await c.servers.wait_until(last, "running", timeout=0.01)
+        assert time.monotonic() - before < 0.5
         assert error.value.last_state.status == "provisioning"
 
 
@@ -498,9 +504,10 @@ def test_create_retry_deadline_keeps_uncertain_outcome(monkeypatch):
     assert error.value.details["deadline_exceeded"] is True
 
 
-async def test_async_dispatched_mutation_deadline_keeps_uncertainty():
+async def test_async_dispatched_mutation_deadline_keeps_uncertainty(monkeypatch):
     from arct.errors import UncertainOperationError
     _, AsyncArct = sdk()
+    monkeypatch.setattr("arct._transport.time", SimpleNamespace(monotonic=lambda: 1000.0))
     calls = []
     async def handle(r):
         if r.url.path.endswith("/account"):
@@ -509,7 +516,7 @@ async def test_async_dispatched_mutation_deadline_keeps_uncertainty():
         await asyncio.sleep(60)
     async with AsyncArct(token="token", operation_timeout=0.01, transport=httpx.MockTransport(handle)) as c:
         with pytest.raises(UncertainOperationError):
-            await c.servers.restart(ID)
+            await asyncio.wait_for(c.servers.restart(ID), timeout=0.5)
     assert len(calls) == 1
 
 

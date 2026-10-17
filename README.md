@@ -4,6 +4,8 @@ Go CLI, Python SDK, and TypeScript/JavaScript SDK for the [Arct Cloud API](https
 
 All clients cover the 22 public operations: account, servers, locations, plans, images, SSH keys, and invoices. Preview source is available from [ArctCloud/sdk](https://github.com/ArctCloud/sdk).
 
+The Python preview is published on [PyPI](https://pypi.org/project/arct-cloud/0.1.0rc1/). npm publication is pending; use the TypeScript source installation below.
+
 | Package | Preview | Requirements |
 | --- | --- | --- |
 | [Go CLI](go/README.md) | `0.1.0-rc.2` | Standalone executable; Go 1.23+ only for source builds |
@@ -75,7 +77,7 @@ with Arct() as client:
 
 ## TypeScript / JavaScript
 
-Install the exact preview version in your application:
+After npm publication, install the exact preview version in your application:
 
 ```bash
 npm install --save-exact @arct-cloud/sdk@0.1.0-rc.1

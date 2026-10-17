@@ -141,10 +141,11 @@ async def test_async_retry_is_cancellable():
 
 
 def test_wait_preserves_password_and_requires_restart_transition(monkeypatch):
-    from arct._transport import Transport
     from arct.errors import WaitTimeoutError
     Arct, _ = sdk()
-    monkeypatch.setattr(Transport, "sleep", lambda *a: None)
+    now = [1000.0]
+    monkeypatch.setattr(time, "monotonic", lambda: now[0])
+    monkeypatch.setattr(time, "sleep", lambda delay: now.__setitem__(0, now[0] + delay))
     observations = []
     def handle(r):
         if r.url.path.endswith("/account"):
