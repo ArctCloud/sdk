@@ -1,10 +1,10 @@
 # Releases
 
-The source repository is [ArctCloud/sdk](https://github.com/ArctCloud/sdk). The first preview uses Python `0.1.0rc1`, TypeScript `0.1.0-rc.1`, and CLI `0.1.0-rc.2`. The initial CLI `rc.1` workflow was cancelled after CI found a timing-sensitive test fixture; it has no published binaries. Release tags are not moved. Stable 1.0.0 requires the contract and acceptance gates in the [design](superpowers/specs/2026-10-17-sdk-cli-design.md).
+The source repository is [ArctCloud/sdk](https://github.com/ArctCloud/sdk). The current previews use Python `0.1.0rc1`, TypeScript `0.1.0-rc.2`, and CLI `0.1.0-rc.2`. The initial CLI `rc.1` workflow was cancelled after CI found a timing-sensitive test fixture; it has no published binaries. Release tags are not moved. Stable 1.0.0 requires the contract and acceptance gates in the [design](superpowers/specs/2026-10-17-sdk-cli-design.md).
 
 The GitHub release environments are configured with required maintainer review and package-specific tag rules. Registry authentication and trusted-publisher configuration must be verified separately before pushing Python or TypeScript release tags. A repository push alone does not publish a package.
 
-Python `0.1.0rc1` is published through the `pypi` trusted publisher; its wheel and source attestations and a clean PyPI installation are verified. The npm `@arct-cloud` organization is owned by the maintainer account, but the first package upload and npm trusted publisher still await terminal authentication.
+Python `0.1.0rc1` is published through the `pypi` trusted publisher; its wheel and source attestations and a clean PyPI installation are verified. TypeScript `0.1.0-rc.1` was published locally to establish the npm package, without CI provenance. TypeScript `0.1.0-rc.2` uses the `npm` trusted publisher and release workflow. Do not push a release tag for the already-published bootstrap version.
 
 The organization currently disables pull-request creation by GitHub Actions. Specification drift checks can run, but automated update PRs require that organization setting to be enabled by an owner.
 
@@ -33,7 +33,7 @@ Keep `typescript/package.json`'s `repository.url` set to `https://github.com/Arc
 
 The release workflow uses Node.js 22 and explicitly installs npm 11.5.1, meeting npm's minimum Node.js 22.14.0/npm 11.5.1 requirements. Publication uses OIDC and provenance without `NPM_TOKEN` or `NODE_AUTH_TOKEN`. Once configured, the owner can disable traditional token publishing in npm settings.
 
-Update the package version, lockfile, and changelog before tagging. Tags must match `typescript/package.json`, for example `typescript-v0.1.0-rc.1`. Prereleases use npm's `next` dist-tag; stable versions use `latest`.
+Update the package version, lockfile, and changelog before tagging. Tags must match `typescript/package.json`, for example `typescript-v0.1.0-rc.2`. Prereleases use npm's `next` dist-tag; stable versions use `latest`.
 
 ## Standalone CLI
 
@@ -59,7 +59,7 @@ python3 scripts/release_smoke.py cli
 
 ```sh
 GITHUB_REF_NAME=python-v0.1.0rc1 python3 scripts/release_check.py python
-GITHUB_REF_NAME=typescript-v0.1.0-rc.1 python3 scripts/release_check.py typescript
+GITHUB_REF_NAME=typescript-v0.1.0-rc.2 python3 scripts/release_check.py typescript
 GITHUB_REF_NAME=cli-v0.1.0-rc.2 python3 scripts/release_check.py cli
 ```
 

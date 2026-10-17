@@ -4,13 +4,13 @@ Go CLI, Python SDK, and TypeScript/JavaScript SDK for the [Arct Cloud API](https
 
 All clients cover the 22 public operations: account, servers, locations, plans, images, SSH keys, and invoices. Preview source is available from [ArctCloud/sdk](https://github.com/ArctCloud/sdk).
 
-The Python preview is published on [PyPI](https://pypi.org/project/arct-cloud/0.1.0rc1/). npm publication is pending; use the TypeScript source installation below.
+Registry previews are available from [PyPI](https://pypi.org/project/arct-cloud/0.1.0rc1/) and [npm](https://www.npmjs.com/package/@arct-cloud/sdk).
 
 | Package | Preview | Requirements |
 | --- | --- | --- |
 | [Go CLI](go/README.md) | `0.1.0-rc.2` | Standalone executable; Go 1.23+ only for source builds |
 | [Python SDK](python/README.md) | `0.1.0rc1` | Python 3.11+ |
-| [TypeScript SDK](typescript/README.md) | `0.1.0-rc.1` | Node.js 22+ |
+| [TypeScript SDK](typescript/README.md) | `0.1.0-rc.2` | Node.js 22+ |
 
 Create a token in Dashboard > Settings > API Tokens. API access must be enabled on your account. Use read-only tokens for read-only jobs; keep tokens out of browser code and source control.
 
@@ -77,10 +77,10 @@ with Arct() as client:
 
 ## TypeScript / JavaScript
 
-After npm publication, install the exact preview version in your application:
+Install the exact preview version in your application:
 
 ```bash
-npm install --save-exact @arct-cloud/sdk@0.1.0-rc.1
+npm install --save-exact @arct-cloud/sdk@0.1.0-rc.2
 ```
 
 Alternatively, build a package from the checkout:
@@ -91,7 +91,7 @@ npm ci
 npm pack --pack-destination ..
 ```
 
-From your application directory, install the resulting tarball with `npm install --save-exact /path/to/sdk/arct-cloud-sdk-0.1.0-rc.1.tgz`.
+From your application directory, install the resulting tarball with `npm install --save-exact /path/to/sdk/arct-cloud-sdk-0.1.0-rc.2.tgz`.
 
 ```typescript
 import { Arct } from '@arct-cloud/sdk';
