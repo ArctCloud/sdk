@@ -163,9 +163,12 @@ def test_wait_preserves_password_and_requires_restart_transition(monkeypatch):
         assert len(observations) >= 2
 
 
-def test_wait_deadline_and_terminal_state():
+def test_wait_deadline_and_terminal_state(monkeypatch):
     from arct.errors import OperationFailedError, WaitTimeoutError
     Arct, _ = sdk()
+    now = [1000.0]
+    monkeypatch.setattr(time, "monotonic", lambda: now[0])
+    monkeypatch.setattr(time, "sleep", lambda delay: now.__setitem__(0, now[0] + delay))
     value = server()
     value["status"] = "error"
     with Arct(token="token", transport=httpx.MockTransport(lambda r: httpx.Response(200, json=value))) as c:
@@ -177,5 +180,5 @@ def test_wait_deadline_and_terminal_state():
         before = time.monotonic()
         with pytest.raises(WaitTimeoutError) as error:
             c.servers.wait_until(ID, "running", timeout=0.01)
-        assert time.monotonic() - before < 0.5
+        assert time.monotonic() - before == pytest.approx(0.01)
         assert error.value.last_state.status == "pre_order"
