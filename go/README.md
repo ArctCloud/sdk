@@ -4,7 +4,7 @@ Standalone CLI for API `/v1`, preview `0.1.0-rc.2`. Go 1.23+ is needed only for 
 
 ## Install the preview
 
-After [CLI preview 0.1.0-rc.2](https://github.com/ArctCloud/sdk/releases/tag/cli-v0.1.0-rc.2) is published, these raw executables and `SHA256SUMS` will be available. Until then, [build from source](#build-from-source).
+Download these raw executables and `SHA256SUMS` from [CLI preview 0.1.0-rc.2](https://github.com/ArctCloud/sdk/releases/tag/cli-v0.1.0-rc.2), or [build from source](#build-from-source).
 
 | Platform | Architecture | Asset |
 | --- | --- | --- |
