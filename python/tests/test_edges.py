@@ -476,9 +476,12 @@ def test_resize_quote_and_mutation_share_operation_deadline(monkeypatch):
     assert now[0] - 1000 < 0.011
 
 
-def test_create_retry_deadline_keeps_uncertain_outcome():
+def test_create_retry_deadline_keeps_uncertain_outcome(monkeypatch):
     from arct.errors import UncertainOperationError
     Arct, _ = sdk()
+    now = [1000.0]
+    monkeypatch.setattr(time, "monotonic", lambda: now[0])
+    monkeypatch.setattr(time, "sleep", lambda delay: now.__setitem__(0, now[0] + delay))
     calls = []
     def handle(r):
         if r.url.path.endswith("/account"):
@@ -486,9 +489,10 @@ def test_create_retry_deadline_keeps_uncertain_outcome():
         calls.append(r)
         return response(503)
     with Arct(token="token", operation_timeout=0.01, transport=httpx.MockTransport(handle)) as c:
-        with pytest.raises(UncertainOperationError):
+        with pytest.raises(UncertainOperationError) as error:
             c.servers.create(**CREATE)
     assert len(calls) == 1
+    assert error.value.details["deadline_exceeded"] is True
 
 
 async def test_async_dispatched_mutation_deadline_keeps_uncertainty():
