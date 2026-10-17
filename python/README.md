@@ -2,7 +2,7 @@
 
 Python 3.11+. First preview: `0.1.0rc1`, targeting the Arct Cloud API `/v1`.
 
-PyPI publication is pending account setup. To use the preview now, clone [ArctCloud/sdk](https://github.com/ArctCloud/sdk) and run `python3 -m pip install ./python` from its root. After registry publication:
+Install the preview:
 
 ```sh
 python3 -m pip install "arct-cloud==0.1.0rc1"

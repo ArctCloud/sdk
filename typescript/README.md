@@ -2,7 +2,7 @@
 
 Arct Cloud API `/v1` client for Node.js 22 and newer. ESM JavaScript and TypeScript declarations; native fetch; no runtime dependencies. First preview: `0.1.0-rc.1`. Source and issues: [ArctCloud/sdk](https://github.com/ArctCloud/sdk).
 
-npm publication is pending account setup. To use the preview now, clone the source, run `npm ci` and `npm pack` in `typescript/`, then install the resulting `.tgz` in your application. After registry publication:
+Install the preview:
 
 ```sh
 npm install --save-exact @arct-cloud/sdk@0.1.0-rc.1
