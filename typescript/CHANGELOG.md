@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.0-rc.4 (preview)
+
+Format README examples with consistent indentation and shorter lines for the npm package page. SDK runtime behavior is unchanged.
+
 ## 0.1.0-rc.3 (preview)
 
 Add Arct Cloud website and documentation links to the package page. SDK runtime behavior is unchanged.

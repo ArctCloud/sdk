@@ -2,23 +2,33 @@
 
 [Arct Cloud](https://www.arct.cloud) · [SDK documentation](https://docs.arct.cloud/api-reference/sdks) · [API reference](https://docs.arct.cloud/api-reference/introduction)
 
-Arct Cloud API `/v1` client for Node.js 22 and newer. ESM JavaScript and TypeScript declarations; native fetch; no runtime dependencies. Preview: `0.1.0-rc.3`. Source and issues: [ArctCloud/sdk](https://github.com/ArctCloud/sdk).
+Arct Cloud API `/v1` client for Node.js 22 and newer. ESM JavaScript and TypeScript declarations; native fetch; no runtime dependencies. Preview: `0.1.0-rc.4`. Source and issues: [ArctCloud/sdk](https://github.com/ArctCloud/sdk).
 
 Install the preview:
 
 ```sh
-npm install --save-exact @arct-cloud/sdk@0.1.0-rc.3
+npm install --save-exact @arct-cloud/sdk@0.1.0-rc.4
 export ARCT_TOKEN=your_dashboard_token
 ```
 
 ```js
-import { Arct, ChargeUnknownError, UncertainOperationError } from '@arct-cloud/sdk';
+import {
+  Arct,
+  ChargeUnknownError,
+  UncertainOperationError,
+} from '@arct-cloud/sdk';
 
 const arct = new Arct();
+
 for await (const server of arct.servers.list({ location: 'fra' })) {
   console.log(server.id, server.status);
 }
-const page = await arct.servers.listPage({ page: 1, perPage: 20 });
+
+const page = await arct.servers.listPage({
+  page: 1,
+  perPage: 20,
+});
+
 console.log(page.pagination);
 ```
 
@@ -39,15 +49,30 @@ Body fields use their API names, for example `image_id`, `ssh_key_ids`, `enable_
 All list resources have a lazy async iterable, requesting 100 items per page by default. `listPage()` retains the API's default page size unless specified and returns the full pagination envelope. Filters persist between pages; empty pages stop iteration. Concurrent API changes can affect page-number pagination.
 
 ```js
-const arct = new Arct({ token: process.env.ARCT_TOKEN, timeoutMs: 30_000 });
-const controller = new AbortController();
-const result = await arct.servers.create({
-  hostname: 'web-1', location: 'fra', plan: 'vm.small', image_id: 'IMAGE_UUID',
-  ssh_key_ids: [], enable_backups: false, billing_period: 'monthly',
-}, { signal: controller.signal });
-const server = await arct.servers.waitUntil(result, 'running', {
-  signal: controller.signal, timeoutMs: 600_000,
+const arct = new Arct({
+  token: process.env.ARCT_TOKEN,
+  timeoutMs: 30_000,
 });
+const controller = new AbortController();
+
+const result = await arct.servers.create(
+  {
+    hostname: 'web-1',
+    location: 'fra',
+    plan: 'vm.small',
+    image_id: 'IMAGE_UUID',
+    ssh_key_ids: [],
+    enable_backups: false,
+    billing_period: 'monthly',
+  },
+  { signal: controller.signal },
+);
+
+const server = await arct.servers.waitUntil(result, 'running', {
+  signal: controller.signal,
+  timeoutMs: 600_000,
+});
+
 console.log(server.id);
 console.log(result.password?.getSecretValue());
 ```
@@ -59,17 +84,44 @@ For SSH-key access, select a saved public key matching your local private key an
 ```js
 const location = 'fra';
 const plan = 'vm.small';
-const images = await Array.fromAsync(arct.images.list({ location }));
-const image = images.find(image => image.name.toLowerCase().includes('ubuntu') &&
-  (image.allowed_plans.length === 0 || image.allowed_plans.includes(plan)));
+
+const images = await Array.fromAsync(
+  arct.images.list({ location }),
+);
+const image = images.find(
+  image =>
+    image.name.toLowerCase().includes('ubuntu') &&
+    (image.allowed_plans.length === 0 ||
+      image.allowed_plans.includes(plan)),
+);
+
 const keys = await Array.fromAsync(arct.sshKeys.list());
 const key = keys.find(key => key.name === 'my-laptop');
-if (!image || !key) throw new Error('Select a compatible image and save your laptop public key in Arct first.');
-const created = await arct.servers.create({ hostname: 'web-ssh', location, plan,
-  image_id: image.id, ssh_key_ids: [key.id] });
+
+if (!image || !key) {
+  throw new Error(
+    'Select a compatible image and save your laptop public key ' +
+      'in Arct first.',
+  );
+}
+
+const created = await arct.servers.create({
+  hostname: 'web-ssh',
+  location,
+  plan,
+  image_id: image.id,
+  ssh_key_ids: [key.id],
+});
+
 const ready = await arct.servers.waitUntil(created, 'running');
-if (!ready.ipv4 || !ready.login_user) throw new Error('SSH connection details are unavailable.');
-console.log(`ssh -i ~/.ssh/id_ed25519 ${ready.login_user}@${ready.ipv4}`);
+
+if (!ready.ipv4 || !ready.login_user) {
+  throw new Error('SSH connection details are unavailable.');
+}
+
+console.log(
+  `ssh -i ~/.ssh/id_ed25519 ${ready.login_user}@${ready.ipv4}`,
+);
 ```
 
 Run the printed native SSH command with the private key matching the selected saved public key. This example charges the saved card when executed.
@@ -88,9 +140,15 @@ Pass the original restart/reinstall result into the waiter. These waits require 
 
 ```js
 try {
-  await arct.servers.resize('SERVER_UUID', { plan: 'vm.medium', expected_amount: '4.12' });
+  await arct.servers.resize('SERVER_UUID', {
+    plan: 'vm.medium',
+    expected_amount: '4.12',
+  });
 } catch (error) {
-  if (error instanceof ChargeUnknownError || error instanceof UncertainOperationError) {
+  if (
+    error instanceof ChargeUnknownError ||
+    error instanceof UncertainOperationError
+  ) {
     console.error(error.code, error.details);
   } else {
     throw error;
