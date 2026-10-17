@@ -4,6 +4,8 @@ The source repository is [ArctCloud/sdk](https://github.com/ArctCloud/sdk). The 
 
 The GitHub release environments are configured with required maintainer review and package-specific tag rules. Registry authentication and trusted-publisher configuration must be verified separately before pushing Python or TypeScript release tags. A repository push alone does not publish a package.
 
+Python `0.1.0rc1` is published through the `pypi` trusted publisher; its wheel and source attestations and a clean PyPI installation are verified. The npm `@arct-cloud` organization is owned by the maintainer account, but the first package upload and npm trusted publisher still await terminal authentication.
+
 The organization currently disables pull-request creation by GitHub Actions. Specification drift checks can run, but automated update PRs require that organization setting to be enabled by an owner.
 
 ## Repository setup
