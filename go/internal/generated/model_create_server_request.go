@@ -23,8 +23,11 @@ var _ MappedNullable = &CreateServerRequest{}
 type CreateServerRequest struct {
 	// RFC 1123 label. A name used by your servers or open orders returns `409 hostname_taken`.
 	Hostname string `json:"hostname" validate:"regexp=^[A-Za-z0-9]([A-Za-z0-9-]{0\\,61}[A-Za-z0-9])?$"`
-	// Location code from `GET /locations`, any case.
-	Location string `json:"location" validate:"regexp=^[A-Za-z0-9-]{1\\,10}$"`
+	// Datacenter code: the location code plus a number, such as `ams1`. From `GET /datacenters`, any case.
+	Datacenter *string `json:"datacenter,omitempty" validate:"regexp=^[A-Za-z]{2\\,5}[0-9]{1\\,2}$"`
+	// Deprecated. Location code without a number, such as `ams`. Still accepted: the server goes to the location's default datacenter for the plan's tier. Use `datacenter`.
+	// Deprecated
+	Location *string `json:"location,omitempty" validate:"regexp=^[A-Za-z0-9-]{1\\,10}$"`
 	// Plan slug from `GET /plans`.
 	Plan string `json:"plan" validate:"regexp=^[A-Za-z0-9][A-Za-z0-9_.-]{0\\,49}$"`
 	// Image ID from `GET /images` for the same location.
@@ -37,6 +40,8 @@ type CreateServerRequest struct {
 	CouponCode NullableString `json:"coupon_code,omitempty"`
 	// True adds automatic backups for 20% of the plan price, where `backups_available` is true.
 	EnableBackups *bool `json:"enable_backups,omitempty"`
+	// `card` charges a saved card; `credit` pays from account credit and needs no card.
+	PaymentMethod *string `json:"payment_method,omitempty"`
 }
 
 type _CreateServerRequest CreateServerRequest
@@ -45,16 +50,17 @@ type _CreateServerRequest CreateServerRequest
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewCreateServerRequest(hostname string, location string, plan string, imageId string) *CreateServerRequest {
+func NewCreateServerRequest(hostname string, plan string, imageId string) *CreateServerRequest {
 	this := CreateServerRequest{}
 	this.Hostname = hostname
-	this.Location = location
 	this.Plan = plan
 	this.ImageId = imageId
 	var billingPeriod string = "monthly"
 	this.BillingPeriod = &billingPeriod
 	var enableBackups bool = false
 	this.EnableBackups = &enableBackups
+	var paymentMethod string = "card"
+	this.PaymentMethod = &paymentMethod
 	return &this
 }
 
@@ -67,6 +73,8 @@ func NewCreateServerRequestWithDefaults() *CreateServerRequest {
 	this.BillingPeriod = &billingPeriod
 	var enableBackups bool = false
 	this.EnableBackups = &enableBackups
+	var paymentMethod string = "card"
+	this.PaymentMethod = &paymentMethod
 	return &this
 }
 
@@ -94,28 +102,71 @@ func (o *CreateServerRequest) SetHostname(v string) {
 	o.Hostname = v
 }
 
-// GetLocation returns the Location field value
-func (o *CreateServerRequest) GetLocation() string {
-	if o == nil {
+// GetDatacenter returns the Datacenter field value if set, zero value otherwise.
+func (o *CreateServerRequest) GetDatacenter() string {
+	if o == nil || IsNil(o.Datacenter) {
 		var ret string
 		return ret
 	}
-
-	return o.Location
+	return *o.Datacenter
 }
 
-// GetLocationOk returns a tuple with the Location field value
+// GetDatacenterOk returns a tuple with the Datacenter field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *CreateServerRequest) GetLocationOk() (*string, bool) {
-	if o == nil {
+func (o *CreateServerRequest) GetDatacenterOk() (*string, bool) {
+	if o == nil || IsNil(o.Datacenter) {
 		return nil, false
 	}
-	return &o.Location, true
+	return o.Datacenter, true
 }
 
-// SetLocation sets field value
+// HasDatacenter returns a boolean if a field has been set.
+func (o *CreateServerRequest) HasDatacenter() bool {
+	if o != nil && !IsNil(o.Datacenter) {
+		return true
+	}
+
+	return false
+}
+
+// SetDatacenter gets a reference to the given string and assigns it to the Datacenter field.
+func (o *CreateServerRequest) SetDatacenter(v string) {
+	o.Datacenter = &v
+}
+
+// GetLocation returns the Location field value if set, zero value otherwise.
+// Deprecated
+func (o *CreateServerRequest) GetLocation() string {
+	if o == nil || IsNil(o.Location) {
+		var ret string
+		return ret
+	}
+	return *o.Location
+}
+
+// GetLocationOk returns a tuple with the Location field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+// Deprecated
+func (o *CreateServerRequest) GetLocationOk() (*string, bool) {
+	if o == nil || IsNil(o.Location) {
+		return nil, false
+	}
+	return o.Location, true
+}
+
+// HasLocation returns a boolean if a field has been set.
+func (o *CreateServerRequest) HasLocation() bool {
+	if o != nil && !IsNil(o.Location) {
+		return true
+	}
+
+	return false
+}
+
+// SetLocation gets a reference to the given string and assigns it to the Location field.
+// Deprecated
 func (o *CreateServerRequest) SetLocation(v string) {
-	o.Location = v
+	o.Location = &v
 }
 
 // GetPlan returns the Plan field value
@@ -305,6 +356,38 @@ func (o *CreateServerRequest) SetEnableBackups(v bool) {
 	o.EnableBackups = &v
 }
 
+// GetPaymentMethod returns the PaymentMethod field value if set, zero value otherwise.
+func (o *CreateServerRequest) GetPaymentMethod() string {
+	if o == nil || IsNil(o.PaymentMethod) {
+		var ret string
+		return ret
+	}
+	return *o.PaymentMethod
+}
+
+// GetPaymentMethodOk returns a tuple with the PaymentMethod field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *CreateServerRequest) GetPaymentMethodOk() (*string, bool) {
+	if o == nil || IsNil(o.PaymentMethod) {
+		return nil, false
+	}
+	return o.PaymentMethod, true
+}
+
+// HasPaymentMethod returns a boolean if a field has been set.
+func (o *CreateServerRequest) HasPaymentMethod() bool {
+	if o != nil && !IsNil(o.PaymentMethod) {
+		return true
+	}
+
+	return false
+}
+
+// SetPaymentMethod gets a reference to the given string and assigns it to the PaymentMethod field.
+func (o *CreateServerRequest) SetPaymentMethod(v string) {
+	o.PaymentMethod = &v
+}
+
 func (o CreateServerRequest) MarshalJSON() ([]byte, error) {
 	toSerialize, err := o.ToMap()
 	if err != nil {
@@ -316,7 +399,12 @@ func (o CreateServerRequest) MarshalJSON() ([]byte, error) {
 func (o CreateServerRequest) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["hostname"] = o.Hostname
-	toSerialize["location"] = o.Location
+	if !IsNil(o.Datacenter) {
+		toSerialize["datacenter"] = o.Datacenter
+	}
+	if !IsNil(o.Location) {
+		toSerialize["location"] = o.Location
+	}
 	toSerialize["plan"] = o.Plan
 	toSerialize["image_id"] = o.ImageId
 	if !IsNil(o.BillingPeriod) {
@@ -331,6 +419,9 @@ func (o CreateServerRequest) ToMap() (map[string]interface{}, error) {
 	if !IsNil(o.EnableBackups) {
 		toSerialize["enable_backups"] = o.EnableBackups
 	}
+	if !IsNil(o.PaymentMethod) {
+		toSerialize["payment_method"] = o.PaymentMethod
+	}
 	return toSerialize, nil
 }
 
@@ -340,7 +431,6 @@ func (o *CreateServerRequest) UnmarshalJSON(data []byte) (err error) {
 	// that every required field exists as a key in the generic map.
 	requiredProperties := []string{
 		"hostname",
-		"location",
 		"plan",
 		"image_id",
 	}

@@ -52,9 +52,9 @@ function identified(value: unknown, key = 'id'): value is Record<string, unknown
 function server(value: unknown): boolean { return identified(value) && ['status', 'hostname', 'location', 'plan', 'billing_period', 'created_at'].every(key => typeof value[key] === 'string'); }
 function validResponse(path: string, method: string, value: unknown): boolean {
   if (!record(value)) return false;
-  if (method === 'GET' && ['/servers', '/locations', '/plans', '/images', '/invoices', '/ssh-keys'].includes(path)) {
+  if (method === 'GET' && ['/servers', '/locations', '/datacenters', '/plans', '/images', '/invoices', '/ssh-keys'].includes(path)) {
     if (!Array.isArray(value.data) || !record(value.pagination) || !['page', 'per_page', 'total', 'total_pages'].every(key => Number.isInteger(value.pagination && (value.pagination as Record<string, unknown>)[key]))) return false;
-    return value.data.every(item => path === '/servers' ? server(item) : identified(item, path === '/locations' ? 'code' : path === '/plans' ? 'slug' : 'id'));
+    return value.data.every(item => path === '/servers' ? server(item) : identified(item, ['/locations', '/datacenters'].includes(path) ? 'code' : path === '/plans' ? 'slug' : 'id'));
   }
   if (path === '/servers' && method === 'POST') return identified(value.order) && (value.order.server_id === null || typeof value.order.server_id === 'string') && Object.hasOwn(value, 'server') && (value.server === null || server(value.server)) && (value.password == null || typeof value.password === 'string');
   if (path.endsWith('/reinstall')) return server(value.server) && (value.password == null || typeof value.password === 'string');

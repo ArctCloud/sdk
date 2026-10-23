@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 )
@@ -270,9 +271,15 @@ func (c *Client) ensureAccount(ctx context.Context) error {
 func (c *Client) uncertainCreate(ctx context.Context, e *APIError, body Params, started time.Time) error {
 	details := map[string]any{"requested_at": started.UTC().Format(time.RFC3339Nano), "ownership_verified": false, "support_details": e.Details}
 	candidates := []any{}
-	q := Params{}
-	if location, ok := body["location"].(string); ok {
-		q["location"] = location
+	selector := "location"
+	if _, ok := body["datacenter"].(string); ok {
+		selector = "datacenter"
+	}
+	requested, _ := body[selector].(string)
+	q := Params{selector: requested}
+	matchField := selector
+	if datacenterPattern.MatchString(requested) {
+		matchField = "datacenter"
 	}
 	items, err := c.All(ctx, "servers_list", q)
 	if err == nil {
@@ -281,7 +288,8 @@ func (c *Client) uncertainCreate(ctx context.Context, e *APIError, body Params, 
 			if server["hostname"] != body["hostname"] {
 				continue
 			}
-			candidate := map[string]any{"server": Redact(server), "attributes_match": server["location"] == body["location"] && server["plan"] == body["plan"]}
+			placement, ok := server[matchField].(string)
+			candidate := map[string]any{"server": Redact(server), "attributes_match": ok && strings.EqualFold(placement, requested) && server["plan"] == body["plan"]}
 			if created, parseErr := time.Parse(time.RFC3339Nano, fmt.Sprint(server["created_at"])); parseErr == nil {
 				candidate["timestamp_near_request"] = !created.Before(started.Add(-5*time.Minute)) && created.Before(time.Now().Add(5*time.Minute))
 			}

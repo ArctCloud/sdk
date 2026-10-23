@@ -42,6 +42,8 @@ export interface ServersListRequest {
 
     location?: string | null;
 
+    datacenter?: string | null;
+
     page?: number;
 
     perPage?: number;
@@ -301,6 +303,10 @@ export class ServersApi extends runtime.BaseAPI {
 
         if (requestParameters['location'] != null) {
             queryParameters['location'] = requestParameters['location'];
+        }
+
+        if (requestParameters['datacenter'] != null) {
+            queryParameters['datacenter'] = requestParameters['datacenter'];
         }
 
         if (requestParameters['page'] != null) {

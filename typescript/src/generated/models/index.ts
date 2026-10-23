@@ -12,6 +12,10 @@ export interface Account {
 
     created_at: string;
 
+    credit_balance?: number;
+
+    credit_autopay?: boolean;
+
     token: TokenInfo;
 }
 
@@ -19,7 +23,9 @@ export interface CreateServerRequest {
 
     hostname: string;
 
-    location: string;
+    datacenter?: string;
+    /** @deprecated Use datacenter. */
+    location?: string;
 
     plan: string;
 
@@ -32,6 +38,8 @@ export interface CreateServerRequest {
     coupon_code?: string | null;
 
     enable_backups?: boolean;
+
+    payment_method?: CreateServerRequestPaymentMethodEnum;
 }
 
 export const CreateServerRequestBillingPeriodEnum = {
@@ -41,6 +49,12 @@ export const CreateServerRequestBillingPeriodEnum = {
     Yearly: 'yearly',
 } as const;
 export type CreateServerRequestBillingPeriodEnum = typeof CreateServerRequestBillingPeriodEnum[keyof typeof CreateServerRequestBillingPeriodEnum];
+
+export const CreateServerRequestPaymentMethodEnum = {
+    Card: 'card',
+    Credit: 'credit',
+} as const;
+export type CreateServerRequestPaymentMethodEnum = typeof CreateServerRequestPaymentMethodEnum[keyof typeof CreateServerRequestPaymentMethodEnum];
 
 export interface CreateServerResponse {
     [key: string]: unknown;
@@ -52,6 +66,54 @@ export interface CreateServerResponse {
     password?: string | null;
 }
 
+export interface CreditTransaction {
+    [key: string]: unknown;
+
+    id: string;
+
+    created_at: string;
+
+    type: CreditTransactionTypeEnum;
+
+    description: string;
+
+    amount: number;
+
+    balance_after: number;
+
+    invoice_id: string | null;
+
+    order_id: string | null;
+}
+
+export const CreditTransactionTypeEnum = {
+    Topup: 'topup',
+    OrderPayment: 'order_payment',
+    InvoicePayment: 'invoice_payment',
+    InvoiceRefund: 'invoice_refund',
+    Adjustment: 'adjustment',
+    RefundPayout: 'refund_payout',
+} as const;
+export type CreditTransactionTypeEnum = typeof CreditTransactionTypeEnum[keyof typeof CreditTransactionTypeEnum];
+
+export interface Datacenter {
+    [key: string]: unknown;
+
+    code: string;
+
+    location: string;
+
+    name: string;
+
+    region: string | null;
+
+    status: string;
+
+    is_preorder: boolean;
+
+    tiers: Array<string>;
+}
+
 export interface ErrorDetail {
     [key: string]: unknown;
 
@@ -59,7 +121,7 @@ export interface ErrorDetail {
 
     message: string;
 
-    details?: object | null;
+    details?: { [key: string]: any; } | null;
 }
 
 export interface ErrorResponse {
@@ -156,6 +218,8 @@ export interface Location {
     status: string;
 
     is_preorder: boolean;
+
+    datacenters?: Array<string>;
 }
 
 export interface Order {
@@ -183,8 +247,23 @@ export interface Order {
 export const OrderPaymentMethodEnum = {
     Card: 'card',
     Promo: 'promo',
+    Credit: 'credit',
 } as const;
 export type OrderPaymentMethodEnum = typeof OrderPaymentMethodEnum[keyof typeof OrderPaymentMethodEnum] | (string & {});
+
+export interface PageCreditTransaction {
+
+    data: Array<CreditTransaction>;
+
+    pagination: Pagination;
+}
+
+export interface PageDatacenter {
+
+    data: Array<Datacenter>;
+
+    pagination: Pagination;
+}
 
 export interface PageImage {
 
@@ -240,6 +319,16 @@ export interface Pagination {
     total_pages: number;
 }
 
+export interface PayInvoiceRequest {
+
+    payment_method: PayInvoiceRequestPaymentMethodEnum;
+}
+
+export const PayInvoiceRequestPaymentMethodEnum = {
+    Credit: 'credit',
+} as const;
+export type PayInvoiceRequestPaymentMethodEnum = typeof PayInvoiceRequestPaymentMethodEnum[keyof typeof PayInvoiceRequestPaymentMethodEnum];
+
 export interface PendingResize {
     [key: string]: unknown;
 
@@ -262,6 +351,8 @@ export interface Plan {
     name: string;
 
     location: string;
+
+    datacenters?: Array<string>;
 
     tier: string;
 
@@ -323,6 +414,10 @@ export interface ResizeOptions {
 
     card: ResizeCard | null;
 
+    payment_methods?: Array<ResizeOptionsPaymentMethodsEnum>;
+
+    credit_balance?: number;
+
     promo: ResizePromo | null;
 
     unpaid_invoice: UnpaidInvoice | null;
@@ -331,6 +426,12 @@ export interface ResizeOptions {
 
     plans: Array<ResizePlan>;
 }
+
+export const ResizeOptionsPaymentMethodsEnum = {
+    Card: 'card',
+    Credit: 'credit',
+} as const;
+export type ResizeOptionsPaymentMethodsEnum = typeof ResizeOptionsPaymentMethodsEnum[keyof typeof ResizeOptionsPaymentMethodsEnum];
 
 export interface ResizePlan {
     [key: string]: unknown;
@@ -405,7 +506,15 @@ export interface ResizeServerRequest {
     plan: string;
 
     expected_amount?: ExpectedAmount | null;
+
+    payment_method?: ResizeServerRequestPaymentMethodEnum;
 }
+
+export const ResizeServerRequestPaymentMethodEnum = {
+    Card: 'card',
+    Credit: 'credit',
+} as const;
+export type ResizeServerRequestPaymentMethodEnum = typeof ResizeServerRequestPaymentMethodEnum[keyof typeof ResizeServerRequestPaymentMethodEnum];
 
 export interface Server {
     [key: string]: unknown;
@@ -417,6 +526,8 @@ export interface Server {
     status: VMStatus;
 
     location: string;
+
+    datacenter?: string | null;
 
     plan: string;
 

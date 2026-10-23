@@ -16,6 +16,12 @@ def compatible(value):
     if not isinstance(value, dict):
         return value
     value = {k: compatible(v) for k, v in value.items()}
+    if 'const' in value:
+        value['enum'] = [value.pop('const')]
+    if isinstance(value.get('examples'), list):
+        examples = value.pop('examples')
+        if examples:
+            value['example'] = examples[0]
     if 'anyOf' in value:
         choices = value['anyOf']
         nonnull = [v for v in choices if v.get('type') != 'null']

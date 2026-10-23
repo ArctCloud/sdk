@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from typing import Annotated, Any, Literal
 from uuid import UUID
 from decimal import Decimal
@@ -30,6 +31,13 @@ class InvoicesApi:
         return self._client.request("invoices_list", "GET", f"/invoices", query, body, PageInvoice)
 
 
+    def pay(self, invoice_id: UUID | str, *, payment_method: Literal['credit']) -> Invoice:
+        invoice_id = UUID(str(invoice_id))
+        query = {k: v for k, v in {}.items() if v is not UNSET and v is not None}
+        body = PayInvoiceRequest.model_validate({k: v for k, v in {'payment_method': payment_method}.items() if v is not UNSET}).model_dump(exclude_unset=True, mode='python')
+        return self._client.request("invoices_pay", "POST", f"/invoices/{invoice_id}/pay", query, body, Invoice)
+
+
 
 class AsyncInvoicesApi:
     def __init__(self, client):
@@ -51,3 +59,10 @@ class AsyncInvoicesApi:
             query['per_page'] = TypeAdapter(Annotated[StrictInt, Field(ge=1, le=100)]).validate_python(per_page)
         body = None
         return await self._client.request("invoices_list", "GET", f"/invoices", query, body, PageInvoice)
+
+
+    async def pay(self, invoice_id: UUID | str, *, payment_method: Literal['credit']) -> Invoice:
+        invoice_id = UUID(str(invoice_id))
+        query = {k: v for k, v in {}.items() if v is not UNSET and v is not None}
+        body = PayInvoiceRequest.model_validate({k: v for k, v in {'payment_method': payment_method}.items() if v is not UNSET}).model_dump(exclude_unset=True, mode='python')
+        return await self._client.request("invoices_pay", "POST", f"/invoices/{invoice_id}/pay", query, body, Invoice)

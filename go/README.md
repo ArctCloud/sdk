@@ -2,7 +2,7 @@
 
 [Arct Cloud](https://www.arct.cloud) · [API reference](https://docs.arct.cloud/api-reference/introduction) · [SDK source](https://github.com/ArctCloud/sdk)
 
-Go 1.23+ client for all 22 public API operations under `/v1`. Set `ARCT_TOKEN` to a dashboard-created API token; prefer read-only tokens for queries. Creating or resizing servers can charge the saved card. Client methods do not prompt.
+Go 1.23+ client for 23 public API operations under `/v1`. Set `ARCT_TOKEN` to a dashboard-created API token; prefer read-only tokens for queries. Creating or resizing servers can charge the saved card. Client methods do not prompt.
 
 For terminal commands, install the Python-based [Arct CLI](../docs/cli.md). Historical Go CLI releases remain available; this package retains the Go API client and its tests.
 
@@ -24,14 +24,16 @@ func main() {
     client, err := arct.New(arct.Options{})
     if err != nil { panic(err) }
     ctx := context.Background()
-    for server, err := range client.Servers.List(ctx, arct.Params{"location": "fra"}) {
+    for server, err := range client.Servers.List(ctx, arct.Params{"datacenter": "ams2"}) {
         if err != nil { panic(err) }
         fmt.Println(server["id"], server["status"])
     }
 }
 ```
 
-Resources expose all operations; `List` returns a lazy Go iterator (100 items per page by default), `ListPage` returns an exact page, and `Client.All` collects pages. `Params` preserves omitted fields, explicit null and empty arrays. Results preserve unknown fields/statuses and use `json.Number` for exact numeric tokens. Generated typed models and endpoint transport reside in `internal/generated`; the public lossless resource facade avoids generated nullable/default coercions.
+Resources expose the supported operations; `List` returns a lazy Go iterator (100 items per page by default), `ListPage` returns an exact page, and `Client.All` collects pages. `Params` preserves omitted fields, explicit null and empty arrays. Results preserve unknown fields/statuses and use `json.Number` for exact numeric tokens. Generated typed models and endpoint transport reside in `internal/generated`; the public lossless resource facade avoids generated nullable/default coercions.
+
+Discover codes with `client.Datacenters.List(ctx, nil)`. Server, plan and image lists accept `arct.Params{"datacenter": "ams2"}`. Creation requires `hostname`, `plan`, `image_id`, and either `datacenter` (for example, `"ams2"`) or legacy `location`. Datacenter codes are case-insensitive and must match `^[A-Za-z]{2,5}[0-9]{1,2}$`. Legacy location selectors remain supported; the API checks that both selectors agree when supplied together.
 
 Use `client.Servers.Create(ctx, arct.Params{...})`, `client.Servers.Resize(ctx, id, plan)` for automatic quoting, or `Resize(ctx, id, plan, json.Number("4.12"))` to supply a quote. An explicit `Resize(ctx, id, plan, nil)` forwards JSON null as the API's deliberate price-check opt-out; the CLI does not expose that opt-out. `Secret.Reveal()` deliberately unwraps a password. Default JSON/string representations redact secrets. `Wait` and `WaitCreated` retain original results. `Options.HTTPClient` permits transport injection; requests have finite timeouts and honor context cancellation.
 

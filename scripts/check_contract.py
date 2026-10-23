@@ -14,7 +14,15 @@ def check():
     operations = [op for item in spec['paths'].values() for method, op in item.items()
                   if method in {'get', 'post', 'put', 'patch', 'delete'}]
     ids = [op['operationId'] for op in operations]
-    assert len(ids) == 22 and len(set(ids)) == len(ids), 'Review endpoint coverage.'
+    assert len(ids) == 25 and len(set(ids)) == len(ids), 'Review endpoint coverage.'
+    assert spec['paths']['/datacenters']['get']['operationId'] == 'datacenters_list'
+    for path in ('/servers', '/plans', '/images'):
+        assert {'location', 'datacenter'} <= {param['name'] for param in spec['paths'][path]['get']['parameters']}
+    create = spec['components']['schemas']['CreateServerRequest']
+    assert create['additionalProperties'] is False
+    assert create['required'] == ['hostname', 'plan', 'image_id']
+    assert create['properties']['location']['deprecated'] is True
+    assert create['properties']['datacenter']['pattern'] == '^[A-Za-z]{2,5}[0-9]{1,2}$'
 
     def visit(value):
         if isinstance(value, list):
@@ -32,9 +40,14 @@ def check():
 
     visit(spec)
     fixtures = json.loads((ROOT / 'api/test-cases.json').read_text())
-    assert len(fixtures['documented_errors']) == 42
-    assert len({(row['status'], row['body']['error']['code']) for row in fixtures['documented_errors']}) == 42
-    print('Contract valid: 22 operations, resolved references, 42 error fixtures.')
+    errors = {(row['status'], row['body']['error']['code']) for row in fixtures['documented_errors']}
+    assert len(fixtures['documented_errors']) == len(errors) == 49
+    assert {(400, 'datacenter_unavailable'), (422, 'datacenter_mismatch')} <= errors
+    assert fixtures['create_datacenter_request']['datacenter'] == 'ams2'
+    assert fixtures['create_datacenter']['server']['datacenter'] == 'ams2'
+    assert fixtures['server_datacenter_null']['datacenter'] is None
+    assert 'datacenter' not in fixtures['server_datacenter_absent']
+    print('Contract valid: 25 operations, resolved references, 49 error fixtures.')
 
 
 if __name__ == '__main__':

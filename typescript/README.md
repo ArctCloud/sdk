@@ -2,12 +2,12 @@
 
 [Arct Cloud](https://www.arct.cloud) · [SDK documentation](https://docs.arct.cloud/api-reference/sdks) · [API reference](https://docs.arct.cloud/api-reference/introduction)
 
-Arct Cloud API `/v1` client for Node.js 22 and newer. ESM JavaScript and TypeScript declarations; native fetch; no runtime dependencies. Preview: `0.1.0-rc.4`. Source and issues: [ArctCloud/sdk](https://github.com/ArctCloud/sdk).
+Arct Cloud API `/v1` client for Node.js 22 and newer. ESM JavaScript and TypeScript declarations; native fetch; no runtime dependencies. Upcoming source preview: `0.1.0-rc.5` (not yet published). Source and issues: [ArctCloud/sdk](https://github.com/ArctCloud/sdk).
 
-Install the preview:
+After publication, install the preview:
 
 ```sh
-npm install --save-exact @arct-cloud/sdk@0.1.0-rc.4
+npm install --save-exact @arct-cloud/sdk@0.1.0-rc.5
 export ARCT_TOKEN=your_dashboard_token
 ```
 
@@ -20,9 +20,12 @@ import {
 
 const arct = new Arct();
 
-for await (const server of arct.servers.list({ location: 'fra' })) {
+for await (const server of arct.servers.list({ datacenter: 'ams2' })) {
   console.log(server.id, server.status);
 }
+
+const datacenters = await Array.fromAsync(arct.datacenters.list());
+console.log(datacenters.map(datacenter => datacenter.code));
 
 const page = await arct.servers.listPage({
   page: 1,
@@ -41,10 +44,12 @@ Use tokens only in trusted server processes. Never put a token in browser code. 
 | `account` | `get` |
 | `servers` | `list`, `listPage`, `get`, `create`, `update`, `delete`, `start`, `stop`, `restart`, `reinstall`, `resizeOptions`, `resize`, `cancelDeletion`, `waitUntil` |
 | `sshKeys` | `list`, `listPage`, `get`, `create`, `delete` |
-| `locations`, `plans`, `images` | `list`, `listPage` |
+| `datacenters`, `locations`, `plans`, `images` | `list`, `listPage` |
 | `invoices` | `list`, `listPage`, `get` |
 
 Body fields use their API names, for example `image_id`, `ssh_key_ids`, `enable_backups`, `billing_period`, `coupon_code`, `delete_protection`, `labels`, `public_key` and `expected_amount`. All request fields are represented in the generated types. Query fields use `perPage` and `atPeriodEnd`; other filter names match the API. Omitted, explicit `false`, empty arrays and nullable fields retain their meaning. Omitted SSH keys use saved keys; `ssh_key_ids: []` explicitly requests password access where supported.
+
+`datacenters.list()` discovers available codes. Create with `datacenter` (for example `ams2`); legacy `location` remains accepted and deprecated. Creation requires at least one selector. Servers, plans and images accept a `datacenter` filter. Invalid datacenter codes and unknown fields in these requests fail locally. New response fields can be absent; `Server.datacenter` can also be null.
 
 All list resources have a lazy async iterable, requesting 100 items per page by default. `listPage()` retains the API's default page size unless specified and returns the full pagination envelope. Filters persist between pages; empty pages stop iteration. Concurrent API changes can affect page-number pagination.
 
@@ -58,8 +63,8 @@ const controller = new AbortController();
 const result = await arct.servers.create(
   {
     hostname: 'web-1',
-    location: 'fra',
-    plan: 'vm.small',
+    datacenter: 'ams2',
+    plan: 'hvm.nano',
     image_id: 'IMAGE_UUID',
     ssh_key_ids: [],
     enable_backups: false,
@@ -82,11 +87,11 @@ This creation example charges the saved card when executed. The SDK never prompt
 For SSH-key access, select a saved public key matching your local private key and a compatible image before creation:
 
 ```js
-const location = 'fra';
-const plan = 'vm.small';
+const datacenter = 'ams2';
+const plan = 'hvm.nano';
 
 const images = await Array.fromAsync(
-  arct.images.list({ location }),
+  arct.images.list({ datacenter }),
 );
 const image = images.find(
   image =>
@@ -107,7 +112,7 @@ if (!image || !key) {
 
 const created = await arct.servers.create({
   hostname: 'web-ssh',
-  location,
+  datacenter,
   plan,
   image_id: image.id,
   ssh_key_ids: [key.id],
@@ -176,10 +181,10 @@ npm run smoke
 
 Generation needs Python 3, Java 11+ and the repository's pinned OpenAPI snapshot. `scripts/generate.mjs` invokes the root generator bootstrap, verifying/downloading OpenAPI Generator 7.26.0. Generated files live in `src/generated`; never edit them. Generation checks content and file-set drift.
 
-Settings: `typescript-fetch`, `withoutRuntimeChecks=true`, `modelPropertyNaming=original`, `hideGenerationTimestamp=true`, `supportsES6=true`, `importFileExtension=.js`. Reproducible adaptations repair the generator's empty `ExpectedAmount` primitive union, add unknown-field index signatures to response models, and open response enum types while retaining strict input enums. Generated comments are removed uniformly. Runtime parsing stays lossless for unknown keys and enum strings; API validation still controls other request constraints.
+Settings: `typescript-fetch`, `withoutRuntimeChecks=true`, `modelPropertyNaming=original`, `hideGenerationTimestamp=true`, `supportsES6=true`, `importFileExtension=.js`. Reproducible adaptations repair the generator's empty `ExpectedAmount` primitive union, add unknown-field index signatures to response models, and open response enum types while retaining strict input enums. Generated comments are removed except `@deprecated` annotations. New response properties are optional for compatibility with older snapshots; creation validates that a datacenter or legacy location is supplied. Runtime parsing stays lossless for unknown keys and enum strings; API validation still controls other request constraints.
 
 Custom HTTPS `baseURL` and injected `fetch` support integration tests. Plain HTTP is allowed only for literal loopback hosts with `allowInsecureLocalhost: true`. Browser and CommonJS builds are not included. The supported runtime baseline is Node 22; local verification passes on Node 22.12.0 and Node 23.5.0 on macOS; the repository CI matrix is configured for Node 22 on Linux, macOS and Windows.
 
-Before stable release, resolve the backend contract notes in `api/contract-notes.md`, verify package ownership and release metadata, and confirm resize response/transition semantics. Dashboard-only capabilities include token management, cards, invoice payment, backups/snapshots, VNC and crypto payments. Server creation can enable backups.
+Before stable release, resolve the backend contract notes in `api/contract-notes.md`, verify package ownership and release metadata, and confirm resize response/transition semantics. Dashboard-only capabilities include token management, cards, backups/snapshots, VNC and crypto payments. Server creation can enable backups.
 
 API compatibility targets `/v1`. After 1.0, public deprecations remain for at least one minor release and removals require a new major version. See `CHANGELOG.md`.
