@@ -64,15 +64,17 @@ def main():
     try:
         datacenters = catalogs["/datacenters"]
         codes = [row["code"] for row in datacenters]
-        if any(not isinstance(row["code"], str) or not isinstance(row["location"], str) for row in datacenters):
+        if any(not isinstance(row["code"], str) or not isinstance(row["location"], str) or not row["location"] for row in datacenters):
             raise ValueError
-        if len(set(codes)) != len(codes) or "ams2" not in codes or any(not re.fullmatch(r"[a-z]{2,5}[0-9]{1,2}", row["code"]) or row["code"].rstrip("0123456789") != row["location"].casefold() for row in datacenters):
+        if len(set(codes)) != len(codes) or "ams2" not in codes or any(not re.fullmatch(r"[a-z]{2,5}[0-9]{1,2}", row["code"]) for row in datacenters):
+            raise ValueError
+        if any(not isinstance(row["location"], str) for path, rows in catalogs.items() if path.startswith("/plans") for row in rows):
             raise ValueError
         scoped, legacy = catalogs["/plans?datacenter=ams2"], catalogs["/plans?location=ams"]
-        if not scoped or not legacy or any(row["location"] != "ams" or row["tier"] != "high_performance" or "ams2" not in row["datacenters"] for row in scoped):
+        if not scoped or not legacy or any(row["location"].casefold() != "ams" or row["tier"] != "high_performance" or "ams2" not in row["datacenters"] for row in scoped):
             raise ValueError
-        all_ams = {row["slug"] for row in catalogs["/plans"] if row["location"] == "ams"}
-        if any(row["location"] != "ams" for row in legacy) or {row["slug"] for row in legacy} != all_ams:
+        all_ams = {row["slug"] for row in catalogs["/plans"] if row["location"].casefold() == "ams"}
+        if any(row["location"].casefold() != "ams" for row in legacy) or {row["slug"] for row in legacy} != all_ams:
             raise ValueError
         expected = {row["slug"] for row in legacy if "ams2" in row["datacenters"]}
         if {row["slug"] for row in scoped} != expected:

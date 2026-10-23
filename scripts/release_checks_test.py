@@ -85,6 +85,19 @@ class ReleaseChecks(unittest.TestCase):
         with patch.dict(os.environ, {"ARCT_READ_TOKEN": "read-token"}), patch("urllib.request.OpenerDirector.open", side_effect=lambda request, timeout: io.BytesIO(json.dumps(bodies[request.full_url.removeprefix(live_smoke.BASE_URL)]).encode())), contextlib.redirect_stdout(io.StringIO()):
             self.assertEqual(live_smoke.main(), 0)
 
+    def test_live_smoke_accepts_legacy_catalog_mappings_and_case(self):
+        for legacy_mapping, uppercase_plans in ((True, False), (False, True), (True, True)):
+            bodies = self.smoke_bodies()
+            if legacy_mapping:
+                bodies['/datacenters']['data'].append({"code": "tyo1", "location": "jp", "tiers": ["standard"]})
+                bodies['/datacenters']['pagination']['total'] = 3
+            if uppercase_plans:
+                for path in ('/plans', '/plans?datacenter=ams2', '/plans?location=ams'):
+                    for row in bodies[path]['data']:
+                        row['location'] = 'AMS'
+            with self.subTest(legacy_mapping=legacy_mapping, uppercase_plans=uppercase_plans), patch.dict(os.environ, {"ARCT_READ_TOKEN": "read-token"}), patch("urllib.request.OpenerDirector.open", side_effect=lambda request, timeout: io.BytesIO(json.dumps(bodies[request.full_url.removeprefix(live_smoke.BASE_URL)]).encode())), contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(live_smoke.main(), 0)
+
     def test_live_smoke_checks_every_catalog_page(self):
         for bad_second_page in (False, True):
             bodies = copy.deepcopy(self.smoke_bodies())
