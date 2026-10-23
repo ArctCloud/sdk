@@ -26,7 +26,10 @@ type Account struct {
 	Name          NullableString `json:"name"`
 	EmailVerified bool           `json:"email_verified"`
 	CreatedAt     time.Time      `json:"created_at"`
-	// The token that made this request.
+	// Account credit, in USD.
+	CreditBalance float32 `json:"credit_balance"`
+	// True if account credit pays invoices on their due date.
+	CreditAutopay        bool      `json:"credit_autopay"`
 	Token                TokenInfo `json:"token"`
 	AdditionalProperties map[string]interface{}
 }
@@ -37,13 +40,15 @@ type _Account Account
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewAccount(id string, email string, name NullableString, emailVerified bool, createdAt time.Time, token TokenInfo) *Account {
+func NewAccount(id string, email string, name NullableString, emailVerified bool, createdAt time.Time, creditBalance float32, creditAutopay bool, token TokenInfo) *Account {
 	this := Account{}
 	this.Id = id
 	this.Email = email
 	this.Name = name
 	this.EmailVerified = emailVerified
 	this.CreatedAt = createdAt
+	this.CreditBalance = creditBalance
+	this.CreditAutopay = creditAutopay
 	this.Token = token
 	return &this
 }
@@ -178,6 +183,54 @@ func (o *Account) SetCreatedAt(v time.Time) {
 	o.CreatedAt = v
 }
 
+// GetCreditBalance returns the CreditBalance field value
+func (o *Account) GetCreditBalance() float32 {
+	if o == nil {
+		var ret float32
+		return ret
+	}
+
+	return o.CreditBalance
+}
+
+// GetCreditBalanceOk returns a tuple with the CreditBalance field value
+// and a boolean to check if the value has been set.
+func (o *Account) GetCreditBalanceOk() (*float32, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return &o.CreditBalance, true
+}
+
+// SetCreditBalance sets field value
+func (o *Account) SetCreditBalance(v float32) {
+	o.CreditBalance = v
+}
+
+// GetCreditAutopay returns the CreditAutopay field value
+func (o *Account) GetCreditAutopay() bool {
+	if o == nil {
+		var ret bool
+		return ret
+	}
+
+	return o.CreditAutopay
+}
+
+// GetCreditAutopayOk returns a tuple with the CreditAutopay field value
+// and a boolean to check if the value has been set.
+func (o *Account) GetCreditAutopayOk() (*bool, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return &o.CreditAutopay, true
+}
+
+// SetCreditAutopay sets field value
+func (o *Account) SetCreditAutopay(v bool) {
+	o.CreditAutopay = v
+}
+
 // GetToken returns the Token field value
 func (o *Account) GetToken() TokenInfo {
 	if o == nil {
@@ -217,6 +270,8 @@ func (o Account) ToMap() (map[string]interface{}, error) {
 	toSerialize["name"] = o.Name.Get()
 	toSerialize["email_verified"] = o.EmailVerified
 	toSerialize["created_at"] = o.CreatedAt
+	toSerialize["credit_balance"] = o.CreditBalance
+	toSerialize["credit_autopay"] = o.CreditAutopay
 	toSerialize["token"] = o.Token
 
 	for key, value := range o.AdditionalProperties {
@@ -236,6 +291,8 @@ func (o *Account) UnmarshalJSON(data []byte) (err error) {
 		"name",
 		"email_verified",
 		"created_at",
+		"credit_balance",
+		"credit_autopay",
 		"token",
 	}
 
@@ -271,6 +328,8 @@ func (o *Account) UnmarshalJSON(data []byte) (err error) {
 		delete(additionalProperties, "name")
 		delete(additionalProperties, "email_verified")
 		delete(additionalProperties, "created_at")
+		delete(additionalProperties, "credit_balance")
+		delete(additionalProperties, "credit_autopay")
 		delete(additionalProperties, "token")
 		o.AdditionalProperties = additionalProperties
 	}

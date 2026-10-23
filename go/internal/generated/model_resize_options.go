@@ -30,8 +30,12 @@ type ResizeOptions struct {
 	CurrentPricePeriod NullableFloat32 `json:"current_price_period"`
 	PeriodEnd          NullableTime    `json:"period_end"`
 	// Days left in the billing period.
-	DaysLeft             NullableInt32 `json:"days_left"`
-	Card                 ResizeCard    `json:"card"`
+	DaysLeft NullableInt32 `json:"days_left"`
+	Card     ResizeCard    `json:"card"`
+	// How a resize can be paid.
+	PaymentMethods []string `json:"payment_methods"`
+	// Your account credit, in USD.
+	CreditBalance        float32       `json:"credit_balance"`
 	Promo                ResizePromo   `json:"promo"`
 	UnpaidInvoice        UnpaidInvoice `json:"unpaid_invoice"`
 	PendingResize        PendingResize `json:"pending_resize"`
@@ -45,7 +49,7 @@ type _ResizeOptions ResizeOptions
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewResizeOptions(canResize bool, blockedCode NullableString, blockedReason NullableString, currentPlan string, billingPeriod string, currentPricePeriod NullableFloat32, periodEnd NullableTime, daysLeft NullableInt32, card ResizeCard, promo ResizePromo, unpaidInvoice UnpaidInvoice, pendingResize PendingResize, plans []ResizePlan) *ResizeOptions {
+func NewResizeOptions(canResize bool, blockedCode NullableString, blockedReason NullableString, currentPlan string, billingPeriod string, currentPricePeriod NullableFloat32, periodEnd NullableTime, daysLeft NullableInt32, card ResizeCard, paymentMethods []string, creditBalance float32, promo ResizePromo, unpaidInvoice UnpaidInvoice, pendingResize PendingResize, plans []ResizePlan) *ResizeOptions {
 	this := ResizeOptions{}
 	this.CanResize = canResize
 	this.BlockedCode = blockedCode
@@ -56,6 +60,8 @@ func NewResizeOptions(canResize bool, blockedCode NullableString, blockedReason 
 	this.PeriodEnd = periodEnd
 	this.DaysLeft = daysLeft
 	this.Card = card
+	this.PaymentMethods = paymentMethods
+	this.CreditBalance = creditBalance
 	this.Promo = promo
 	this.UnpaidInvoice = unpaidInvoice
 	this.PendingResize = pendingResize
@@ -297,6 +303,54 @@ func (o *ResizeOptions) SetCard(v ResizeCard) {
 	o.Card = v
 }
 
+// GetPaymentMethods returns the PaymentMethods field value
+func (o *ResizeOptions) GetPaymentMethods() []string {
+	if o == nil {
+		var ret []string
+		return ret
+	}
+
+	return o.PaymentMethods
+}
+
+// GetPaymentMethodsOk returns a tuple with the PaymentMethods field value
+// and a boolean to check if the value has been set.
+func (o *ResizeOptions) GetPaymentMethodsOk() ([]string, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return o.PaymentMethods, true
+}
+
+// SetPaymentMethods sets field value
+func (o *ResizeOptions) SetPaymentMethods(v []string) {
+	o.PaymentMethods = v
+}
+
+// GetCreditBalance returns the CreditBalance field value
+func (o *ResizeOptions) GetCreditBalance() float32 {
+	if o == nil {
+		var ret float32
+		return ret
+	}
+
+	return o.CreditBalance
+}
+
+// GetCreditBalanceOk returns a tuple with the CreditBalance field value
+// and a boolean to check if the value has been set.
+func (o *ResizeOptions) GetCreditBalanceOk() (*float32, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return &o.CreditBalance, true
+}
+
+// SetCreditBalance sets field value
+func (o *ResizeOptions) SetCreditBalance(v float32) {
+	o.CreditBalance = v
+}
+
 // GetPromo returns the Promo field value
 func (o *ResizeOptions) GetPromo() ResizePromo {
 	if o == nil {
@@ -412,6 +466,8 @@ func (o ResizeOptions) ToMap() (map[string]interface{}, error) {
 	toSerialize["period_end"] = o.PeriodEnd.Get()
 	toSerialize["days_left"] = o.DaysLeft.Get()
 	toSerialize["card"] = o.Card
+	toSerialize["payment_methods"] = o.PaymentMethods
+	toSerialize["credit_balance"] = o.CreditBalance
 	toSerialize["promo"] = o.Promo
 	toSerialize["unpaid_invoice"] = o.UnpaidInvoice
 	toSerialize["pending_resize"] = o.PendingResize
@@ -438,6 +494,8 @@ func (o *ResizeOptions) UnmarshalJSON(data []byte) (err error) {
 		"period_end",
 		"days_left",
 		"card",
+		"payment_methods",
+		"credit_balance",
 		"promo",
 		"unpaid_invoice",
 		"pending_resize",
@@ -480,6 +538,8 @@ func (o *ResizeOptions) UnmarshalJSON(data []byte) (err error) {
 		delete(additionalProperties, "period_end")
 		delete(additionalProperties, "days_left")
 		delete(additionalProperties, "card")
+		delete(additionalProperties, "payment_methods")
+		delete(additionalProperties, "credit_balance")
 		delete(additionalProperties, "promo")
 		delete(additionalProperties, "unpaid_invoice")
 		delete(additionalProperties, "pending_resize")

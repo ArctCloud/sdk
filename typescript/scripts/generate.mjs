@@ -26,9 +26,12 @@ try {
   }
   for (const file of files) {
     let source = await readFile(join(temp, file), 'utf8');
-    source = source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '').replace(/[ \t]+\/\/[^\n]*$/gm, '').replace(/\n{3,}/g, '\n\n').trimStart();
+    source = source.replace(/\/\*[\s\S]*?\*\//g, comment => comment.includes('@deprecated') ? '/** @deprecated Use datacenter. */' : '').replace(/^\s*\/\/.*$/gm, '').replace(/[ \t]+\/\/[^\n]*$/gm, '').replace(/\n{3,}/g, '\n\n').trimStart();
     if (file === 'models/index.ts') {
       source = source.replace(/export interface ExpectedAmount \{\s*\}/, 'export type ExpectedAmount = number | string;');
+      for (const [name, fields] of [['Location', ['datacenters']], ['Plan', ['datacenters']], ['Server', ['datacenter']], ['Account', ['credit_balance', 'credit_autopay']], ['ResizeOptions', ['payment_methods', 'credit_balance']]]) {
+        for (const field of fields) source = source.replace(new RegExp(`(export interface ${name} \\{[\\s\\S]*?\\n    ${field})(\\??):`), '$1?:');
+      }
       for (const name of responses) source = source.replace(`export interface ${name} {`, `export interface ${name} {\n    [key: string]: unknown;`);
       for (const name of ['VMStatus', 'InvoiceStatus', 'OrderPaymentMethodEnum', 'ResizeResponseStatusEnum']) {
         source = source.replace(`export type ${name} = typeof ${name}[keyof typeof ${name}];`, `export type ${name} = typeof ${name}[keyof typeof ${name}] | (string & {});`);
@@ -43,5 +46,5 @@ try {
       await writeFile(out, source);
     }
   }
-  console.log(`Generation ${process.argv.includes('--check') ? 'check' : 'complete'}: ${files.length} files, 22 operations`);
+  console.log(`Generation ${process.argv.includes('--check') ? 'check' : 'complete'}: ${files.length} files, ${Object.values(spec.paths).flatMap(path => Object.values(path)).filter(operation => operation.operationId).length} operations`);
 } finally { await rm(temp, { recursive: true, force: true }); }

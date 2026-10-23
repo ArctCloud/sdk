@@ -14,3 +14,4 @@ class Location(BaseModel):
     region: StrictStr | None
     status: StrictStr
     is_preorder: StrictBool
+    datacenters: list[StrictStr] | None = None

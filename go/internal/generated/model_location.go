@@ -25,8 +25,10 @@ type Location struct {
 	Name   string         `json:"name"`
 	Region NullableString `json:"region"`
 	// `online` or `maintenance`.
-	Status               string `json:"status"`
-	IsPreorder           bool   `json:"is_preorder"`
+	Status     string `json:"status"`
+	IsPreorder bool   `json:"is_preorder"`
+	// Datacenter codes in this location, such as `ams1`.
+	Datacenters          []string `json:"datacenters"`
 	AdditionalProperties map[string]interface{}
 }
 
@@ -36,13 +38,14 @@ type _Location Location
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewLocation(code string, name string, region NullableString, status string, isPreorder bool) *Location {
+func NewLocation(code string, name string, region NullableString, status string, isPreorder bool, datacenters []string) *Location {
 	this := Location{}
 	this.Code = code
 	this.Name = name
 	this.Region = region
 	this.Status = status
 	this.IsPreorder = isPreorder
+	this.Datacenters = datacenters
 	return &this
 }
 
@@ -176,6 +179,30 @@ func (o *Location) SetIsPreorder(v bool) {
 	o.IsPreorder = v
 }
 
+// GetDatacenters returns the Datacenters field value
+func (o *Location) GetDatacenters() []string {
+	if o == nil {
+		var ret []string
+		return ret
+	}
+
+	return o.Datacenters
+}
+
+// GetDatacentersOk returns a tuple with the Datacenters field value
+// and a boolean to check if the value has been set.
+func (o *Location) GetDatacentersOk() ([]string, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return o.Datacenters, true
+}
+
+// SetDatacenters sets field value
+func (o *Location) SetDatacenters(v []string) {
+	o.Datacenters = v
+}
+
 func (o Location) MarshalJSON() ([]byte, error) {
 	toSerialize, err := o.ToMap()
 	if err != nil {
@@ -191,6 +218,7 @@ func (o Location) ToMap() (map[string]interface{}, error) {
 	toSerialize["region"] = o.Region.Get()
 	toSerialize["status"] = o.Status
 	toSerialize["is_preorder"] = o.IsPreorder
+	toSerialize["datacenters"] = o.Datacenters
 
 	for key, value := range o.AdditionalProperties {
 		toSerialize[key] = value
@@ -209,6 +237,7 @@ func (o *Location) UnmarshalJSON(data []byte) (err error) {
 		"region",
 		"status",
 		"is_preorder",
+		"datacenters",
 	}
 
 	allProperties := make(map[string]interface{})
@@ -243,6 +272,7 @@ func (o *Location) UnmarshalJSON(data []byte) (err error) {
 		delete(additionalProperties, "region")
 		delete(additionalProperties, "status")
 		delete(additionalProperties, "is_preorder")
+		delete(additionalProperties, "datacenters")
 		o.AdditionalProperties = additionalProperties
 	}
 

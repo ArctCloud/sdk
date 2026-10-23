@@ -14,4 +14,6 @@ The approved adaptation is `templates/model.mustache` and `templates/api.mustach
 
 The generated bindings delegate one generic policy transport to native `httpx.Client` / `httpx.AsyncClient`; this is where raw-token Decimal JSON decoding, exact Decimal request strings, retries, shared throttling, and bounded waits belong. There is no handwritten endpoint inventory and no hand-edited generated output. Account discovery and create reconciliation call generated bindings as well.
 
+Compatibility annotations keep additive datacenter fields optional and nullable, and additive account/resize credit fields optional but nonnullable. Creation validates that either `datacenter` or `location` is supplied; request enums, constants and field constraints remain strict. Legacy `location` arguments emit `DeprecationWarning` while location catalog methods remain available.
+
 Run `python python/scripts/generate.py --check` from the repository root. It regenerates into a temporary directory and compares all generated Python bytes. The generator intentionally handles the checked-in schema forms rather than exposing a generic generator framework. New schema forms must be reviewed alongside generated diffs and tests.

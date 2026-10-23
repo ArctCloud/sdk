@@ -6,5 +6,5 @@ from .errors import (
     ValidationError, WaitTimeoutError,
 )
 
-__version__ = "0.1.0rc3"
+__version__ = "0.1.0rc4"
 __all__ = ["Arct", "AsyncArct", "APIError", "AuthenticationError", "ChargeUnknownError", "ConflictError", "NotFoundError", "OperationFailedError", "PaymentRequiredError", "PermissionDeniedError", "RateLimitError", "UncertainOperationError", "ValidationError", "WaitTimeoutError"]

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0rc4 (unreleased)
+
+- Add datacenter discovery, create placement and catalog/server filters to sync/async SDKs and the CLI.
+- Preserve legacy location calls with deprecation warnings and tolerate absent/null datacenter response fields.
+- Match datacenter placement and legacy aliases during uncertain create reconciliation without inferring success or repeating a conflicting creation.
+- Regenerate from the live API contract, including account credit responses and operations; older account responses remain accepted.
+
 ## 0.1.0rc3 (preview)
 
 - Add the `arct` command and `python -m arct`, reusing the Python SDK and existing credential contexts.

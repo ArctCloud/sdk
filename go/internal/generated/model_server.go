@@ -26,6 +26,8 @@ type Server struct {
 	Status   VMStatus `json:"status"`
 	// Location code, such as `fra`.
 	Location string `json:"location"`
+	// Datacenter code, such as `fra1`, or null if the host has none.
+	Datacenter NullableString `json:"datacenter"`
 	// Plan slug.
 	Plan        string         `json:"plan"`
 	PlanName    NullableString `json:"plan_name"`
@@ -41,7 +43,7 @@ type Server struct {
 	// OS user to sign in as. Null in list responses.
 	LoginUser NullableString `json:"login_user"`
 	Labels    []string       `json:"labels"`
-	// True blocks `DELETE`.
+	// True blocks `DELETE` and reinstall.
 	DeleteProtection bool `json:"delete_protection"`
 	// `monthly`, `quarterly`, `semi_annual` or `yearly`.
 	BillingPeriod string `json:"billing_period"`
@@ -61,12 +63,13 @@ type _Server Server
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewServer(id string, hostname string, status VMStatus, location string, plan string, planName NullableString, cpuCores int32, ramGb int32, storageGb int32, bandwidthTb int32, ipv4 NullableString, ipv6 NullableString, os string, loginUser NullableString, labels []string, deleteProtection bool, billingPeriod string, price float32, nextDueDate NullableString, cancelAt NullableTime, createdAt time.Time) *Server {
+func NewServer(id string, hostname string, status VMStatus, location string, datacenter NullableString, plan string, planName NullableString, cpuCores int32, ramGb int32, storageGb int32, bandwidthTb int32, ipv4 NullableString, ipv6 NullableString, os string, loginUser NullableString, labels []string, deleteProtection bool, billingPeriod string, price float32, nextDueDate NullableString, cancelAt NullableTime, createdAt time.Time) *Server {
 	this := Server{}
 	this.Id = id
 	this.Hostname = hostname
 	this.Status = status
 	this.Location = location
+	this.Datacenter = datacenter
 	this.Plan = plan
 	this.PlanName = planName
 	this.CpuCores = cpuCores
@@ -189,6 +192,32 @@ func (o *Server) GetLocationOk() (*string, bool) {
 // SetLocation sets field value
 func (o *Server) SetLocation(v string) {
 	o.Location = v
+}
+
+// GetDatacenter returns the Datacenter field value
+// If the value is explicit nil, the zero value for string will be returned
+func (o *Server) GetDatacenter() string {
+	if o == nil || o.Datacenter.Get() == nil {
+		var ret string
+		return ret
+	}
+
+	return *o.Datacenter.Get()
+}
+
+// GetDatacenterOk returns a tuple with the Datacenter field value
+// and a boolean to check if the value has been set.
+// NOTE: If the value is an explicit nil, `nil, true` will be returned
+func (o *Server) GetDatacenterOk() (*string, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return o.Datacenter.Get(), o.Datacenter.IsSet()
+}
+
+// SetDatacenter sets field value
+func (o *Server) SetDatacenter(v string) {
+	o.Datacenter.Set(&v)
 }
 
 // GetPlan returns the Plan field value
@@ -625,6 +654,7 @@ func (o Server) ToMap() (map[string]interface{}, error) {
 	toSerialize["hostname"] = o.Hostname
 	toSerialize["status"] = o.Status
 	toSerialize["location"] = o.Location
+	toSerialize["datacenter"] = o.Datacenter.Get()
 	toSerialize["plan"] = o.Plan
 	toSerialize["plan_name"] = o.PlanName.Get()
 	toSerialize["cpu_cores"] = o.CpuCores
@@ -659,6 +689,7 @@ func (o *Server) UnmarshalJSON(data []byte) (err error) {
 		"hostname",
 		"status",
 		"location",
+		"datacenter",
 		"plan",
 		"plan_name",
 		"cpu_cores",
@@ -709,6 +740,7 @@ func (o *Server) UnmarshalJSON(data []byte) (err error) {
 		delete(additionalProperties, "hostname")
 		delete(additionalProperties, "status")
 		delete(additionalProperties, "location")
+		delete(additionalProperties, "datacenter")
 		delete(additionalProperties, "plan")
 		delete(additionalProperties, "plan_name")
 		delete(additionalProperties, "cpu_cores")

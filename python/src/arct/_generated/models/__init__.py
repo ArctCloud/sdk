@@ -1,6 +1,8 @@
 from .account import Account
 from .create_server_request import CreateServerRequest
 from .create_server_response import CreateServerResponse
+from .credit_transaction import CreditTransaction
+from .datacenter import Datacenter
 from .error_detail import ErrorDetail
 from .error_response import ErrorResponse
 from .image import Image
@@ -8,6 +10,8 @@ from .invoice import Invoice
 from .invoice_item import InvoiceItem
 from .location import Location
 from .order import Order
+from .page_credit_transaction import PageCreditTransaction
+from .page_datacenter import PageDatacenter
 from .page_image import PageImage
 from .page_invoice import PageInvoice
 from .page_location import PageLocation
@@ -15,6 +19,7 @@ from .page_plan import PagePlan
 from .page_server import PageServer
 from .page_ssh_key import PageSshKey
 from .pagination import Pagination
+from .pay_invoice_request import PayInvoiceRequest
 from .pending_resize import PendingResize
 from .plan import Plan
 from .reinstall_response import ReinstallResponse

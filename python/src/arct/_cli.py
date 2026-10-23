@@ -9,6 +9,7 @@ from pathlib import Path
 import re
 import signal
 import sys
+import warnings
 from uuid import UUID
 
 from pydantic import BaseModel, SecretStr, ValidationError as ModelValidationError
@@ -22,11 +23,11 @@ from .models import CreateServerRequest, ResizeServerRequest, ServerReinstall, S
 
 COMMANDS = {
     "account": "get", "servers": "list get create update delete start stop restart reinstall resize-options resize cancel-deletion wait",
-    "locations": "list", "plans": "list", "images": "list", "ssh-keys": "list get create delete",
+    "datacenters": "list", "locations": "list", "plans": "list", "images": "list", "ssh-keys": "list get create delete",
     "invoices": "list get", "auth": "login logout status", "context": "list use delete",
 }
 BOOLS = {"no-header", "yes", "all", "wait", "show-password", "coupon-code-null", "enable-backups", "delete-protection", "at-period-end"}
-VALUES = {"context", "base-url", "output", "columns", "page", "per-page", "timeout", "status", "hostname", "image", "ssh-key", "plan", "billing-period", "coupon-code", "label", "expected-amount", "location", "name", "public-key", "public-key-file"}
+VALUES = {"context", "base-url", "output", "columns", "page", "per-page", "timeout", "status", "hostname", "image", "ssh-key", "plan", "billing-period", "coupon-code", "label", "expected-amount", "datacenter", "location", "name", "public-key", "public-key-file"}
 STATUSES = "provisioning running stopped restarting reinstalling restoring deleting suspended pre_order".split()
 
 
@@ -111,6 +112,7 @@ def _parser(args):
         if action == "resize":
             add("expected-amount")
     if resource == "servers" and action in ("create", "list") or resource in ("plans", "images") and action == "list":
+        add("datacenter")
         add("location")
     if resource == "ssh-keys" and action == "create":
         for name in ("name", "public-key", "public-key-file"):
@@ -273,12 +275,12 @@ class App:
         if action == "list":
             if not 1 <= f.get("page", 1) <= 100000 or not 1 <= f.get("per_page", 20) <= 100:
                 raise UsageError("invalid page or per-page")
-            kwargs = {key: f[key] for key in ("page", "per_page", "location", "status") if key in f}
+            kwargs = {key: f[key] for key in ("page", "per_page", "datacenter", "location", "status") if key in f}
             if "status" in f and f["status"] not in STATUSES:
                 raise UsageError("unsupported status filter")
         if resource == "servers":
             fields = {
-                "create": ("hostname", "location", "plan", "image", "billing_period", "ssh_key", "coupon_code", "enable_backups"),
+                "create": ("hostname", "datacenter", "location", "plan", "image", "billing_period", "ssh_key", "coupon_code", "enable_backups"),
                 "update": ("hostname", "delete_protection", "label"),
                 "reinstall": ("image", "ssh_key", "hostname"), "resize": ("plan",), "delete": ("at_period_end",),
             }.get(action, ())
@@ -333,7 +335,8 @@ class App:
             kwargs = {"name": f.get("name", ""), "public_key": key}
             SshKeyCreate.model_validate(kwargs)
         if resource == "servers" and action == "create":
-            self.confirm(f, f"Create {kwargs['hostname']}: plan={kwargs['plan']} location={kwargs['location']} billing={f.get('billing_period', 'monthly')}. A saved card is charged; final charges depend on promotions, backups and billing period.")
+            placement = " ".join(f"{key}={kwargs[key]}" for key in ("datacenter", "location") if key in kwargs)
+            self.confirm(f, f"Create {kwargs['hostname']}: plan={kwargs['plan']} {placement} billing={f.get('billing_period', 'monthly')}. A saved card is charged; final charges depend on promotions, backups and billing period.")
         if action == "delete" or resource == "servers" and action in ("reinstall", "cancel-deletion"):
             self.confirm(f, f"Confirm {resource} {action} {identifier}; this may destroy data or change billing.")
         with self.client(f) as client:
@@ -403,7 +406,7 @@ class App:
         if isinstance(value, list):
             columns = [column for column in f.get("columns", "").split(",") if column]
             if not columns:
-                columns = [key for key in "id code slug name hostname status location plan invoice_number total active base_url".split() if any(isinstance(row, dict) and key in row for row in value)]
+                columns = [key for key in "id code slug name hostname status datacenter location plan invoice_number total active base_url".split() if any(isinstance(row, dict) and key in row for row in value)]
             rows = [] if f.get("no_header") or not columns else [columns]
             rows += [[self.display(row.get(key)) for key in columns] for row in value]
             self.table(rows)
@@ -465,7 +468,11 @@ def main(argv=None):
         if f["output"] == "json" and (f.get("columns") or f.get("no_header")):
             raise UsageError("--columns and --no-header apply to table output")
         resource, action, *ids = pos
-        result = app.local(resource, action, ids, f) if resource in ("auth", "context") else app.remote(resource, action, ids, f)
+        if "location" in f:
+            app.message("Warning: --location is deprecated; use --datacenter instead.")
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecationWarning)
+            result = app.local(resource, action, ids, f) if resource in ("auth", "context") else app.remote(resource, action, ids, f)
         app.render(result, f)
         return 0
     except (Exception, KeyboardInterrupt) as error:

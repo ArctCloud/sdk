@@ -24,6 +24,8 @@ type ResizeServerRequest struct {
 	// Plan slug from `GET /servers/{server_id}/resize-options`.
 	Plan           string                 `json:"plan" validate:"regexp=^[A-Za-z0-9][A-Za-z0-9_.-]{0\\,49}$"`
 	ExpectedAmount NullableExpectedAmount `json:"expected_amount,omitempty"`
+	// `card` charges a saved card; `credit` pays from account credit and needs no card.
+	PaymentMethod *string `json:"payment_method,omitempty"`
 }
 
 type _ResizeServerRequest ResizeServerRequest
@@ -35,6 +37,8 @@ type _ResizeServerRequest ResizeServerRequest
 func NewResizeServerRequest(plan string) *ResizeServerRequest {
 	this := ResizeServerRequest{}
 	this.Plan = plan
+	var paymentMethod string = "card"
+	this.PaymentMethod = &paymentMethod
 	return &this
 }
 
@@ -43,6 +47,8 @@ func NewResizeServerRequest(plan string) *ResizeServerRequest {
 // but it doesn't guarantee that properties required by API are set
 func NewResizeServerRequestWithDefaults() *ResizeServerRequest {
 	this := ResizeServerRequest{}
+	var paymentMethod string = "card"
+	this.PaymentMethod = &paymentMethod
 	return &this
 }
 
@@ -113,6 +119,38 @@ func (o *ResizeServerRequest) UnsetExpectedAmount() {
 	o.ExpectedAmount.Unset()
 }
 
+// GetPaymentMethod returns the PaymentMethod field value if set, zero value otherwise.
+func (o *ResizeServerRequest) GetPaymentMethod() string {
+	if o == nil || IsNil(o.PaymentMethod) {
+		var ret string
+		return ret
+	}
+	return *o.PaymentMethod
+}
+
+// GetPaymentMethodOk returns a tuple with the PaymentMethod field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *ResizeServerRequest) GetPaymentMethodOk() (*string, bool) {
+	if o == nil || IsNil(o.PaymentMethod) {
+		return nil, false
+	}
+	return o.PaymentMethod, true
+}
+
+// HasPaymentMethod returns a boolean if a field has been set.
+func (o *ResizeServerRequest) HasPaymentMethod() bool {
+	if o != nil && !IsNil(o.PaymentMethod) {
+		return true
+	}
+
+	return false
+}
+
+// SetPaymentMethod gets a reference to the given string and assigns it to the PaymentMethod field.
+func (o *ResizeServerRequest) SetPaymentMethod(v string) {
+	o.PaymentMethod = &v
+}
+
 func (o ResizeServerRequest) MarshalJSON() ([]byte, error) {
 	toSerialize, err := o.ToMap()
 	if err != nil {
@@ -126,6 +164,9 @@ func (o ResizeServerRequest) ToMap() (map[string]interface{}, error) {
 	toSerialize["plan"] = o.Plan
 	if o.ExpectedAmount.IsSet() {
 		toSerialize["expected_amount"] = o.ExpectedAmount.Get()
+	}
+	if !IsNil(o.PaymentMethod) {
+		toSerialize["payment_method"] = o.PaymentMethod
 	}
 	return toSerialize, nil
 }

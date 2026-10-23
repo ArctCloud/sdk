@@ -20,9 +20,11 @@ var _ MappedNullable = &Plan{}
 
 // Plan struct for Plan
 type Plan struct {
-	Slug             string        `json:"slug"`
-	Name             string        `json:"name"`
-	Location         string        `json:"location"`
+	Slug     string `json:"slug"`
+	Name     string `json:"name"`
+	Location string `json:"location"`
+	// Datacenters you can order this plan in, such as `ams1`.
+	Datacenters      []string      `json:"datacenters"`
 	Tier             string        `json:"tier"`
 	CpuCores         int32         `json:"cpu_cores"`
 	RamGb            int32         `json:"ram_gb"`
@@ -42,11 +44,12 @@ type _Plan Plan
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewPlan(slug string, name string, location string, tier string, cpuCores int32, ramGb int32, storageGb int32, bandwidthTb int32, networkSpeedGbps NullableInt32, priceMonthly float32, inStock bool, backupsAvailable bool) *Plan {
+func NewPlan(slug string, name string, location string, datacenters []string, tier string, cpuCores int32, ramGb int32, storageGb int32, bandwidthTb int32, networkSpeedGbps NullableInt32, priceMonthly float32, inStock bool, backupsAvailable bool) *Plan {
 	this := Plan{}
 	this.Slug = slug
 	this.Name = name
 	this.Location = location
+	this.Datacenters = datacenters
 	this.Tier = tier
 	this.CpuCores = cpuCores
 	this.RamGb = ramGb
@@ -137,6 +140,30 @@ func (o *Plan) GetLocationOk() (*string, bool) {
 // SetLocation sets field value
 func (o *Plan) SetLocation(v string) {
 	o.Location = v
+}
+
+// GetDatacenters returns the Datacenters field value
+func (o *Plan) GetDatacenters() []string {
+	if o == nil {
+		var ret []string
+		return ret
+	}
+
+	return o.Datacenters
+}
+
+// GetDatacentersOk returns a tuple with the Datacenters field value
+// and a boolean to check if the value has been set.
+func (o *Plan) GetDatacentersOk() ([]string, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return o.Datacenters, true
+}
+
+// SetDatacenters sets field value
+func (o *Plan) SetDatacenters(v []string) {
+	o.Datacenters = v
 }
 
 // GetTier returns the Tier field value
@@ -370,6 +397,7 @@ func (o Plan) ToMap() (map[string]interface{}, error) {
 	toSerialize["slug"] = o.Slug
 	toSerialize["name"] = o.Name
 	toSerialize["location"] = o.Location
+	toSerialize["datacenters"] = o.Datacenters
 	toSerialize["tier"] = o.Tier
 	toSerialize["cpu_cores"] = o.CpuCores
 	toSerialize["ram_gb"] = o.RamGb
@@ -395,6 +423,7 @@ func (o *Plan) UnmarshalJSON(data []byte) (err error) {
 		"slug",
 		"name",
 		"location",
+		"datacenters",
 		"tier",
 		"cpu_cores",
 		"ram_gb",
@@ -436,6 +465,7 @@ func (o *Plan) UnmarshalJSON(data []byte) (err error) {
 		delete(additionalProperties, "slug")
 		delete(additionalProperties, "name")
 		delete(additionalProperties, "location")
+		delete(additionalProperties, "datacenters")
 		delete(additionalProperties, "tier")
 		delete(additionalProperties, "cpu_cores")
 		delete(additionalProperties, "ram_gb")

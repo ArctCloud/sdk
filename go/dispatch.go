@@ -33,6 +33,9 @@ func (c *Client) dispatch(ctx context.Context, op, id string, q, body map[string
 		if _, ok := q["location"]; ok {
 			r = r.Location(text(q, "location"))
 		}
+		if _, ok := q["datacenter"]; ok {
+			r = r.Datacenter(text(q, "datacenter"))
+		}
 		_, resp, err = r.Execute()
 	case "servers_get":
 		_, resp, err = c.api.ServersAPI.ServersGet(ctx, id).Execute()
@@ -60,6 +63,15 @@ func (c *Client) dispatch(ctx context.Context, op, id string, q, body map[string
 		_, resp, err = c.api.ServersAPI.ServersResize(ctx, id).RequestBody(body).Execute()
 	case "servers_cancel_deletion":
 		_, resp, err = c.api.ServersAPI.ServersCancelDeletion(ctx, id).Execute()
+	case "datacenters_list":
+		r := c.api.CatalogAPI.DatacentersList(ctx)
+		if _, ok := q["page"]; ok {
+			r = r.Page(number(q, "page"))
+		}
+		if _, ok := q["per_page"]; ok {
+			r = r.PerPage(number(q, "per_page"))
+		}
+		_, resp, err = r.Execute()
 	case "locations_list":
 		r := c.api.CatalogAPI.LocationsList(ctx)
 		if _, ok := q["page"]; ok {
@@ -80,6 +92,9 @@ func (c *Client) dispatch(ctx context.Context, op, id string, q, body map[string
 		if _, ok := q["location"]; ok {
 			r = r.Location(text(q, "location"))
 		}
+		if _, ok := q["datacenter"]; ok {
+			r = r.Datacenter(text(q, "datacenter"))
+		}
 		_, resp, err = r.Execute()
 	case "images_list":
 		r := c.api.CatalogAPI.ImagesList(ctx)
@@ -91,6 +106,9 @@ func (c *Client) dispatch(ctx context.Context, op, id string, q, body map[string
 		}
 		if _, ok := q["location"]; ok {
 			r = r.Location(text(q, "location"))
+		}
+		if _, ok := q["datacenter"]; ok {
+			r = r.Datacenter(text(q, "datacenter"))
 		}
 		_, resp, err = r.Execute()
 	case "invoices_list":

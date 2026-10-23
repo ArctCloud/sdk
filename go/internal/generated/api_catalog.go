@@ -21,17 +21,206 @@ import (
 // CatalogAPIService CatalogAPI service
 type CatalogAPIService service
 
-type ApiImagesListRequest struct {
+type ApiDatacentersListRequest struct {
 	ctx        context.Context
 	ApiService *CatalogAPIService
-	location   *string
 	page       *int32
 	perPage    *int32
 }
 
-// Filter by location code, such as &#x60;fra&#x60;.
+// Page number.
+func (r ApiDatacentersListRequest) Page(page int32) ApiDatacentersListRequest {
+	r.page = &page
+	return r
+}
+
+// Items per page.
+func (r ApiDatacentersListRequest) PerPage(perPage int32) ApiDatacentersListRequest {
+	r.perPage = &perPage
+	return r
+}
+
+func (r ApiDatacentersListRequest) Execute() (map[string]interface{}, *http.Response, error) {
+	return r.ApiService.DatacentersListExecute(r)
+}
+
+/*
+DatacentersList List Datacenters
+
+Returns the datacenters you can order servers in. `location` is the location code without a number, as used by older requests.
+
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@return ApiDatacentersListRequest
+*/
+func (a *CatalogAPIService) DatacentersList(ctx context.Context) ApiDatacentersListRequest {
+	return ApiDatacentersListRequest{
+		ApiService: a,
+		ctx:        ctx,
+	}
+}
+
+// Execute executes the request
+//
+//	@return map[string]interface{}
+func (a *CatalogAPIService) DatacentersListExecute(r ApiDatacentersListRequest) (map[string]interface{}, *http.Response, error) {
+	var (
+		localVarHTTPMethod  = http.MethodGet
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue map[string]interface{}
+	)
+
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "CatalogAPIService.DatacentersList")
+	if err != nil {
+		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
+	}
+
+	localVarPath := localBasePath + "/datacenters"
+
+	localVarHeaderParams := make(map[string]string)
+	localVarQueryParams := url.Values{}
+	localVarFormParams := url.Values{}
+
+	if r.page != nil {
+		parameterAddToHeaderOrQuery(localVarQueryParams, "page", r.page, "form", "")
+	} else {
+		var defaultValue int32 = 1
+		parameterAddToHeaderOrQuery(localVarQueryParams, "page", defaultValue, "form", "")
+		r.page = &defaultValue
+	}
+	if r.perPage != nil {
+		parameterAddToHeaderOrQuery(localVarQueryParams, "per_page", r.perPage, "form", "")
+	} else {
+		var defaultValue int32 = 20
+		parameterAddToHeaderOrQuery(localVarQueryParams, "per_page", defaultValue, "form", "")
+		r.perPage = &defaultValue
+	}
+	// to determine the Content-Type header
+	localVarHTTPContentTypes := []string{}
+
+	// set Content-Type header
+	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
+	if localVarHTTPContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
+	}
+
+	// to determine the Accept header
+	localVarHTTPHeaderAccepts := []string{"application/json"}
+
+	// set Accept header
+	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
+	if localVarHTTPHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, formFiles)
+	if err != nil {
+		return localVarReturnValue, nil, err
+	}
+
+	localVarHTTPResponse, err := a.client.callAPI(req)
+	if err != nil || localVarHTTPResponse == nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarHTTPResponse.Body.Close()
+	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
+	if err != nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	if localVarHTTPResponse.StatusCode >= 300 {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: localVarHTTPResponse.Status,
+		}
+		if localVarHTTPResponse.StatusCode == 401 {
+			var v map[string]interface{}
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+		if localVarHTTPResponse.StatusCode == 403 {
+			var v map[string]interface{}
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+		if localVarHTTPResponse.StatusCode == 422 {
+			var v map[string]interface{}
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+		if localVarHTTPResponse.StatusCode == 429 {
+			var v map[string]interface{}
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+		if localVarHTTPResponse.StatusCode == 500 {
+			var v map[string]interface{}
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+	if err != nil {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: err.Error(),
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	return localVarReturnValue, localVarHTTPResponse, nil
+}
+
+type ApiImagesListRequest struct {
+	ctx        context.Context
+	ApiService *CatalogAPIService
+	location   *string
+	datacenter *string
+	page       *int32
+	perPage    *int32
+}
+
+// Filter by location code, such as &#x60;fra&#x60;. A datacenter code here works like &#x60;datacenter&#x60;.
 func (r ApiImagesListRequest) Location(location string) ApiImagesListRequest {
 	r.location = &location
+	return r
+}
+
+// Filter by datacenter code, such as &#x60;fra1&#x60;.
+func (r ApiImagesListRequest) Datacenter(datacenter string) ApiImagesListRequest {
+	r.datacenter = &datacenter
 	return r
 }
 
@@ -54,7 +243,7 @@ func (r ApiImagesListRequest) Execute() (map[string]interface{}, *http.Response,
 /*
 ImagesList List OS Images
 
-Returns OS images per location. Filter with `location`.
+Returns OS images per location. Filter with `datacenter` or `location`.
 
 	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 	@return ApiImagesListRequest
@@ -90,6 +279,9 @@ func (a *CatalogAPIService) ImagesListExecute(r ApiImagesListRequest) (map[strin
 
 	if r.location != nil {
 		parameterAddToHeaderOrQuery(localVarQueryParams, "location", r.location, "form", "")
+	}
+	if r.datacenter != nil {
+		parameterAddToHeaderOrQuery(localVarQueryParams, "datacenter", r.datacenter, "form", "")
 	}
 	if r.page != nil {
 		parameterAddToHeaderOrQuery(localVarQueryParams, "page", r.page, "form", "")
@@ -410,13 +602,20 @@ type ApiPlansListRequest struct {
 	ctx        context.Context
 	ApiService *CatalogAPIService
 	location   *string
+	datacenter *string
 	page       *int32
 	perPage    *int32
 }
 
-// Filter by location code, such as &#x60;fra&#x60;.
+// Filter by location code, such as &#x60;fra&#x60;. A datacenter code here works like &#x60;datacenter&#x60;.
 func (r ApiPlansListRequest) Location(location string) ApiPlansListRequest {
 	r.location = &location
+	return r
+}
+
+// Filter by datacenter code, such as &#x60;fra1&#x60;.
+func (r ApiPlansListRequest) Datacenter(datacenter string) ApiPlansListRequest {
+	r.datacenter = &datacenter
 	return r
 }
 
@@ -439,7 +638,7 @@ func (r ApiPlansListRequest) Execute() (map[string]interface{}, *http.Response, 
 /*
 PlansList List Plans
 
-Returns plans and monthly prices per location. Filter with `location`.
+Returns plans and monthly prices per location. Filter with `datacenter` or `location`. With `datacenter`, `in_stock` is that datacenter's stock.
 
 	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 	@return ApiPlansListRequest
@@ -475,6 +674,9 @@ func (a *CatalogAPIService) PlansListExecute(r ApiPlansListRequest) (map[string]
 
 	if r.location != nil {
 		parameterAddToHeaderOrQuery(localVarQueryParams, "location", r.location, "form", "")
+	}
+	if r.datacenter != nil {
+		parameterAddToHeaderOrQuery(localVarQueryParams, "datacenter", r.datacenter, "form", "")
 	}
 	if r.page != nil {
 		parameterAddToHeaderOrQuery(localVarQueryParams, "page", r.page, "form", "")

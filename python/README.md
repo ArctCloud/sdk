@@ -2,12 +2,12 @@
 
 [Arct Cloud](https://www.arct.cloud) · [SDK documentation](https://docs.arct.cloud/api-reference/sdks) · [API reference](https://docs.arct.cloud/api-reference/introduction)
 
-Python 3.11+. Preview: `0.1.0rc3`, targeting the Arct Cloud API `/v1`.
+Python 3.11+. Source version: `0.1.0rc4` (unreleased), targeting the Arct Cloud API `/v1`.
 
-Install the preview:
+Install from the repository checkout:
 
 ```sh
-python3 -m pip install "arct-cloud==0.1.0rc3"
+python3 -m pip install ./python
 ```
 
 The package includes the `arct` CLI and `python -m arct`. After installation:
@@ -17,7 +17,7 @@ arct --version
 python -m arct servers list --output json
 ```
 
-For a private macOS/Linux CLI installation, use `curl -fsSL https://raw.githubusercontent.com/ArctCloud/sdk/main/install.sh | sh`, then `export PATH="$HOME/.local/bin:$PATH"` in the current terminal. Existing Go CLI credentials and contexts remain compatible. See the [CLI guide](https://docs.arct.cloud/api-reference/cli) for Windows, updates and commands.
+The repository's `install.sh` installs published versions; `0.1.0rc4` is prepared in source and must be published before a package installer can fetch it. Existing Go CLI credentials and contexts remain compatible. See the [CLI guide](https://docs.arct.cloud/api-reference/cli) for Windows, updates and commands.
 
 Source and issues: [ArctCloud/sdk](https://github.com/ArctCloud/sdk).
 
@@ -41,9 +41,9 @@ from arct import AsyncArct
 
 async def main():
     async with AsyncArct() as client:
-        async for server in client.servers.list(location="fra"):
+        async for server in client.servers.list(datacenter="ams2"):
             print(server.id, server.status)
-        page = await client.images.list_page(location="fra", page=1, per_page=20)
+        page = await client.images.list_page(datacenter="ams2", page=1, per_page=20)
         print(page.pagination.total)
 
 asyncio.run(main())
@@ -56,12 +56,19 @@ The native synchronous HTTPX client also works in a thread with an active event 
 - `account.get()`
 - `servers.list()`, `list_page()`, `get(id)`, `create(...)`, `update(id, ...)`, `delete(id, at_period_end=...)`, `start(id)`, `stop(id)`, `restart(id)`, `reinstall(id, ...)`, `cancel_deletion(id)`, `resize_options(id)`, `resize(id, ...)`
 - `ssh_keys.list()`, `list_page()`, `get(id)`, `create(name=..., public_key=...)`, `delete(id)`
-- `locations.list()`, `plans.list(location=...)`, `images.list(location=...)`, and their `list_page()` methods
+- `datacenters.list()`, `plans.list(datacenter=...)`, `images.list(datacenter=...)`, and their `list_page()` methods
+- `locations.list()` remains available; legacy `location=...` filters emit `DeprecationWarning`
 - `invoices.list()`, `list_page()`, `get(id)`
 
 Each `list()` is lazy and fetches 100 items per page. `list_page()` preserves the typed API envelope and API defaults. Empty pages stop iteration. Page numbers do not represent a snapshot during concurrent changes. All request fields are available as keyword arguments and validated locally. Unsupported server status filters, including `error`, fail locally. The backend currently documents a conflicting label limit (10 in prose, 100 in schema); the SDK follows the schema and the backend remains authoritative.
 
+Create with `client.servers.create(hostname="web-1", plan="hvm.nano", image_id=image_id, datacenter="ams2")`. Datacenter codes match `^[A-Za-z]{2,5}[0-9]{1,2}$`. Creation requires `hostname`, `plan`, `image_id`, and at least one of `datacenter` or legacy `location`. Both may be sent; the API checks their agreement. Legacy `location=` is accepted with a `DeprecationWarning`, including aliases such as `lon1`. Server, plan and image lists accept either filter.
+
+The CLI supports `arct datacenters list`, `arct servers create --datacenter ams2 --plan hvm.nano ...` and `arct servers list --datacenter ams2`. `arct locations list` remains available. `--location` remains available and prints one deprecation line to stderr.
+
 Response models are Pydantic models, available from `arct.models`; new fields and response enum values are accepted. All monetary response values are `Decimal`, decoded from original JSON numeric tokens. Optional input fields are omitted unless passed; explicit nullable `None`, `[]`, and `False` retain their distinct meanings. In particular, omitted `ssh_key_ids` selects saved keys, while `[]` requests a password where supported.
+
+For compatibility with older responses and model construction, `Location.datacenters`, `Plan.datacenters` and `Server.datacenter` accept absence or null. Newly documented `Account.credit_balance`, `Account.credit_autopay`, `ResizeOptions.credit_balance` and `ResizeOptions.payment_methods` may be absent; explicit null is still rejected. Request validation remains strict.
 
 ## Retries and uncertainty
 
@@ -70,6 +77,8 @@ GET network failures and HTTP 500/503 retry with exponential jitter. Creation us
 Any `details.order_intent_id` or HTTP 409 `payment_pending` raises `ChargeUnknownError` immediately, even if the HTTP status would otherwise retry. Preserve its support identifiers and inspect billing before another purchase. Other mutation network/500/503 failures raise `UncertainOperationError`; repeating restart, reinstall, delete, or resize automatically could apply the action twice.
 
 A retried create that encounters `hostname_taken` raises `UncertainOperationError` with `.candidates`. A matching hostname and timestamp cannot establish order ownership or recover a one-time password. The SDK never constructs a successful order from such a candidate. Known server IDs are queried directly when supplied by the API.
+
+Candidate placement checks compare datacenters and locations without case sensitivity. A legacy location alias such as `lon1` checks `server.datacenter`; an absent/null datacenter cannot confirm that match.
 
 Exceptions exported from `arct`: `AuthenticationError`, `PaymentRequiredError`, `PermissionDeniedError`, `NotFoundError`, `ConflictError`, `ValidationError`, `RateLimitError`, `APIError`, `ChargeUnknownError`, `UncertainOperationError`, `OperationFailedError`, and `WaitTimeoutError`. They expose `.status`, `.code`, safe `.details`; validation errors expose `.fields`. Unknown codes use the status class. `insufficient_scope` directs callers to a `read_write` token; `api_access_disabled` directs callers to the dashboard.
 

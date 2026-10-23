@@ -12,6 +12,7 @@ class Plan(BaseModel):
     slug: StrictStr
     name: StrictStr
     location: StrictStr
+    datacenters: list[StrictStr] | None = None
     tier: StrictStr
     cpu_cores: StrictInt
     ram_gb: StrictInt
