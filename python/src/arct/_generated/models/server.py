@@ -14,6 +14,7 @@ class Server(BaseModel):
     hostname: StrictStr
     status: VMStatus
     location: StrictStr
+    datacenter: StrictStr | None
     plan: StrictStr
     plan_name: StrictStr | None
     cpu_cores: StrictInt

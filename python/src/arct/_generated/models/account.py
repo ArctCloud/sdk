@@ -15,4 +15,6 @@ class Account(BaseModel):
     name: StrictStr | None
     email_verified: StrictBool
     created_at: datetime
+    credit_balance: Decimal
+    credit_autopay: StrictBool
     token: TokenInfo

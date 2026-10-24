@@ -23,6 +23,8 @@ class ResizeOptions(BaseModel):
     period_end: datetime | None
     days_left: StrictInt | None
     card: ResizeCard | None
+    payment_methods: list[StrictStr]
+    credit_balance: Decimal
     promo: ResizePromo | None
     unpaid_invoice: UnpaidInvoice | None
     pending_resize: PendingResize | None
