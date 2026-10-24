@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "arct-cloud"
-version = "0.1.0rc3"
+version = "0.1.0rc4"
 description = "Arct Cloud CLI and synchronous and asynchronous API clients"
 readme = "README.md"
 requires-python = ">=3.11"

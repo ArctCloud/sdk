@@ -34,6 +34,8 @@ def annotation(schema, request=False, refs=None):
         return annotation(schema["allOf"][0], request, refs)
     if request and "enum" in schema:
         return "Literal[" + ", ".join(repr(x) for x in schema["enum"]) + "]"
+    if request and "const" in schema:
+        return f"Literal[{schema['const']!r}]"
     kind = schema.get("type", "object")
     result = {"null": "None", "string": "StrictStr", "integer": "StrictInt", "boolean": "StrictBool", "number": "Decimal", "object": "dict[str, Any]"}.get(kind)
     if kind == "array":
@@ -61,11 +63,19 @@ def render_spec(spec):
             for field, prop in schema.get("properties", {}).items():
                 typ = "SecretStr | None" if field == "password" else annotation(prop, req, refs)
                 optional = field not in schema.get("required", [])
+                if not req and (key, field) in {("Location", "datacenters"), ("Plan", "datacenters"), ("Server", "datacenter")}:
+                    optional = True
+                    if "None" not in typ:
+                        typ += " | None"
+                if not req and ((key == "Account" and field in {"credit_balance", "credit_autopay"}) or (key == "ResizeOptions" and field in {"credit_balance", "payment_methods"})):
+                    optional = True
                 if optional and "None" not in typ:
                     invalid_nulls.append(field)
                 lines.append(f"    {field}: {typ}" + (" = None" if optional else ""))
             if invalid_nulls:
                 lines += ["", "    @model_validator(mode='before')", "    @classmethod", "    def reject_null(cls, value):", "        if isinstance(value, dict):", f"            for key in {invalid_nulls!r}:", "                if key in value and value[key] is None:", "                    raise ValueError(f'{key} cannot be null')", "        return value"]
+            if req and key == "CreateServerRequest" and "datacenter" in schema["properties"]:
+                lines += ["", "    @model_validator(mode='before')", "    @classmethod", "    def require_placement(cls, value):", "        if isinstance(value, dict) and not (value.get('datacenter') or value.get('location')):", "            raise ValueError('datacenter or location is required')", "        return value"]
         schema["x-arct-body"] = "\n".join(lines)
         schema["x-arct-imports"] = [f"from arct._generated.models.{filename(ref)} import {name(ref)}" for ref in sorted(refs) if ref != key]
     for path, item in spec["paths"].items():
@@ -116,6 +126,8 @@ def render_spec(spec):
                 prep.append(f"        body = {body_type}.model_validate({{k: v for k, v in {{{fields}}}.items() if v is not UNSET}}).model_dump(exclude_unset=True, mode='python')")
             else:
                 prep.append("        body = None")
+            if any(p["name"] == "location" for p in params) or body_ref and body_schema["properties"].get("location", {}).get("deprecated"):
+                prep += ["        if location is not UNSET and location is not None:", "            warnings.warn('location is deprecated; use datacenter instead', DeprecationWarning, stacklevel=2)"]
             op["x-arct-prepare"] = "\n".join(prep)
     return spec
 

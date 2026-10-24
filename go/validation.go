@@ -13,6 +13,7 @@ import (
 var hostnamePattern = regexp.MustCompile(`^[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?$`)
 var labelPattern = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9-]{0,62}$`)
 var locationPattern = regexp.MustCompile(`^[A-Za-z0-9-]{1,10}$`)
+var datacenterPattern = regexp.MustCompile(`^[A-Za-z]{2,5}[0-9]{1,2}$`)
 var planPattern = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_.-]{0,49}$`)
 var uuidPattern = regexp.MustCompile(`^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$`)
 var decimalPattern = regexp.MustCompile(`^[+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$`)
@@ -28,17 +29,17 @@ func ValidAmount(v any) bool {
 }
 func validate(op string, q, b Params) error {
 	switch op {
-	case "account_get", "servers_list", "servers_get", "servers_create", "servers_update", "servers_delete", "servers_start", "servers_stop", "servers_restart", "servers_reinstall", "servers_resize_options", "servers_resize", "servers_cancel_deletion", "locations_list", "plans_list", "images_list", "ssh_keys_list", "ssh_keys_get", "ssh_keys_create", "ssh_keys_delete", "invoices_list", "invoices_get":
+	case "account_get", "servers_list", "servers_get", "servers_create", "servers_update", "servers_delete", "servers_start", "servers_stop", "servers_restart", "servers_reinstall", "servers_resize_options", "servers_resize", "servers_cancel_deletion", "locations_list", "datacenters_list", "plans_list", "images_list", "ssh_keys_list", "ssh_keys_get", "ssh_keys_create", "ssh_keys_delete", "invoices_list", "invoices_get":
 	default:
 		return fmt.Errorf("unknown operation")
 	}
 	queries := ""
 	switch op {
 	case "servers_list":
-		queries = "page per_page status location"
+		queries = "page per_page status location datacenter"
 	case "plans_list", "images_list":
-		queries = "page per_page location"
-	case "locations_list", "ssh_keys_list", "invoices_list":
+		queries = "page per_page location datacenter"
+	case "locations_list", "datacenters_list", "ssh_keys_list", "invoices_list":
 		queries = "page per_page"
 	case "servers_delete":
 		queries = "at_period_end"
@@ -73,9 +74,14 @@ func validate(op string, q, b Params) error {
 			if !ok || !locationPattern.MatchString(value) {
 				return fmt.Errorf("invalid location")
 			}
+		case "datacenter":
+			value, ok := v.(string)
+			if !ok || !datacenterPattern.MatchString(value) {
+				return fmt.Errorf("invalid datacenter")
+			}
 		}
 	}
-	allowed := map[string]string{"servers_create": "hostname location plan image_id billing_period ssh_key_ids coupon_code enable_backups", "servers_update": "hostname delete_protection labels", "servers_reinstall": "image_id ssh_key_ids hostname", "servers_resize": "plan expected_amount", "ssh_keys_create": "name public_key"}
+	allowed := map[string]string{"servers_create": "hostname location datacenter plan image_id billing_period ssh_key_ids coupon_code enable_backups", "servers_update": "hostname delete_protection labels", "servers_reinstall": "image_id ssh_key_ids hostname", "servers_resize": "plan expected_amount", "ssh_keys_create": "name public_key"}
 	fields, hasBody := allowed[op]
 	if !hasBody {
 		return nil
@@ -97,6 +103,11 @@ func validate(op string, q, b Params) error {
 			value, ok := v.(string)
 			if !ok || !locationPattern.MatchString(value) {
 				return fmt.Errorf("invalid location")
+			}
+		case "datacenter":
+			value, ok := v.(string)
+			if !ok || !datacenterPattern.MatchString(value) {
+				return fmt.Errorf("invalid datacenter")
 			}
 		case "plan":
 			value, ok := v.(string)
@@ -163,11 +174,14 @@ func validate(op string, q, b Params) error {
 			}
 		}
 	}
-	required := map[string]string{"servers_create": "hostname location plan image_id", "servers_reinstall": "image_id", "servers_resize": "plan", "ssh_keys_create": "name public_key"}
+	required := map[string]string{"servers_create": "hostname plan image_id", "servers_reinstall": "image_id", "servers_resize": "plan", "ssh_keys_create": "name public_key"}
 	for _, k := range strings.Fields(required[op]) {
 		if _, ok := b[k]; !ok {
 			return fmt.Errorf("%s required", k)
 		}
+	}
+	if op == "servers_create" && b["datacenter"] == nil && b["location"] == nil {
+		return fmt.Errorf("datacenter or location required")
 	}
 	if op == "servers_update" && len(b) == 0 {
 		return fmt.Errorf("at least one update field required")

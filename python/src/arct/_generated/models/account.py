@@ -15,4 +15,15 @@ class Account(BaseModel):
     name: StrictStr | None
     email_verified: StrictBool
     created_at: datetime
+    credit_balance: Decimal = None
+    credit_autopay: StrictBool = None
     token: TokenInfo
+
+    @model_validator(mode='before')
+    @classmethod
+    def reject_null(cls, value):
+        if isinstance(value, dict):
+            for key in ['credit_balance', 'credit_autopay']:
+                if key in value and value[key] is None:
+                    raise ValueError(f'{key} cannot be null')
+        return value

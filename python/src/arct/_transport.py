@@ -7,6 +7,7 @@ import json
 import math
 import os
 import random
+import re
 import time
 from urllib.parse import urlparse
 from uuid import UUID
@@ -266,7 +267,15 @@ class Transport:
             await self.asleep(retry_delay(response, attempt), deadline)
 
     def candidate_checks(self, body, candidates, started):
-        return [{"server_id": str(v.id), "attributes_match": v.hostname == body["hostname"] and v.location.lower() == body["location"].lower() and v.plan == body["plan"] and v.billing_period == body.get("billing_period", "monthly"), "created_since_attempt": v.created_at.replace(tzinfo=v.created_at.tzinfo or timezone.utc) >= started} for v in candidates]
+        def placement_matches(server):
+            for field in ("datacenter", "location"):
+                if field in body:
+                    value = body[field]
+                    target = "datacenter" if field == "datacenter" or re.fullmatch(r"[A-Za-z]{2,5}[0-9]{1,2}", value) else "location"
+                    if (getattr(server, target, None) or "").lower() != value.lower():
+                        return False
+            return True
+        return [{"server_id": str(v.id), "attributes_match": v.hostname == body["hostname"] and placement_matches(v) and v.plan == body["plan"] and v.billing_period == body.get("billing_period", "monthly"), "created_since_attempt": v.created_at.replace(tzinfo=v.created_at.tzinfo or timezone.utc) >= started} for v in candidates]
 
     def reconcile(self, body, details):
         try:

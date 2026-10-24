@@ -471,3 +471,58 @@ def test_rejected_token_flag_does_not_echo_value(cli, capsys):
     assert main(["account", "get", "--token", "untracked-secret", "--output=json"]) == 2
     captured = capsys.readouterr()
     assert "untracked-secret" not in captured.out + captured.err
+
+
+def test_datacenters_table(cli, capsys):
+    from test_datacenters import DATACENTER
+    setup, seen, _ = cli
+    def handle(request):
+        seen.append(request.url.path)
+        return httpx.Response(200, json=page([DATACENTER]))
+    assert setup(handle)(["datacenters", "list"]) == 0
+    captured = capsys.readouterr()
+    assert "fra1" in captured.out and "Frankfurt" in captured.out
+    assert captured.err == "" and seen == ["/v1/datacenters"]
+
+
+@pytest.mark.parametrize("resource", ["servers", "plans", "images"])
+@pytest.mark.parametrize("flag,value", [("--datacenter", "FRA1"), ("--location", "fra")])
+def test_placement_filter_flags(cli, capsys, resource, flag, value):
+    setup, seen, _ = cli
+    def handle(request):
+        seen.append(dict(request.url.params))
+        return httpx.Response(200, json=page([]))
+    assert setup(handle)([resource, "list", flag, value]) == 0
+    captured = capsys.readouterr()
+    assert seen == [{flag[2:]: value}]
+    assert captured.err.count("deprecated") == int(flag == "--location")
+    assert len(captured.err.splitlines()) == int(flag == "--location")
+
+
+def test_datacenter_create_flag(cli, capsys):
+    setup, seen, _ = cli
+    def handle(request):
+        if request.url.path.endswith("/account"):
+            return httpx.Response(200, json=ACCOUNT)
+        seen.append(json.loads(request.content))
+        return httpx.Response(201, json=created())
+    args = ["servers", "create", "--hostname", "web-1", "--datacenter", "fra1", "--plan", "vm.small", "--image", ID, "--yes"]
+    assert setup(handle)(args) == 0
+    assert seen == [{"hostname": "web-1", "datacenter": "fra1", "plan": "vm.small", "image_id": ID}]
+    assert "deprecated" not in capsys.readouterr().err
+
+
+def test_locations_catalog_remains_available(cli, capsys):
+    setup, _, _ = cli
+    assert setup(lambda r: httpx.Response(200, json=page([])))(["locations", "list"]) == 0
+    assert capsys.readouterr().err == ""
+
+
+@pytest.mark.parametrize("args", [
+    ["servers", "create", "--hostname", "web-1", "--plan", "vm.small", "--image", ID, "--yes"],
+    ["servers", "create", "--hostname", "web-1", "--datacenter", "fra", "--plan", "vm.small", "--image", ID, "--yes"],
+    ["servers", "list", "--datacenter", "fra"],
+])
+def test_invalid_datacenter_flags_never_request(cli, args):
+    setup, _, _ = cli
+    assert setup(lambda r: pytest.fail("No request expected"))(args) == 2

@@ -231,7 +231,7 @@ func (r ApiServersCreateRequest) Execute() (map[string]interface{}, *http.Respon
 /*
 ServersCreate Create a Server
 
-Creates a server and charges the first billing period to your default card, else your first saved card. A saved card is required. Poll `GET /servers/{server_id}` until `status` is `running`.
+Creates a server in `datacenter` and charges the first billing period to your default card, else your first saved card. A saved card is required unless `payment_method` is `credit`, which pays from account credit. Poll `GET /servers/{server_id}` until `status` is `running`.
 
 	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 	@return ApiServersCreateRequest
@@ -812,6 +812,7 @@ type ApiServersListRequest struct {
 	ApiService *ServersAPIService
 	status     *string
 	location   *string
+	datacenter *string
 	page       *int32
 	perPage    *int32
 }
@@ -822,9 +823,15 @@ func (r ApiServersListRequest) Status(status string) ApiServersListRequest {
 	return r
 }
 
-// Filter by location code, such as &#x60;fra&#x60;.
+// Filter by location code, such as &#x60;fra&#x60;. A datacenter code here works like &#x60;datacenter&#x60;.
 func (r ApiServersListRequest) Location(location string) ApiServersListRequest {
 	r.location = &location
+	return r
+}
+
+// Filter by datacenter code, such as &#x60;fra1&#x60;.
+func (r ApiServersListRequest) Datacenter(datacenter string) ApiServersListRequest {
+	r.datacenter = &datacenter
 	return r
 }
 
@@ -886,6 +893,9 @@ func (a *ServersAPIService) ServersListExecute(r ApiServersListRequest) (map[str
 	}
 	if r.location != nil {
 		parameterAddToHeaderOrQuery(localVarQueryParams, "location", r.location, "form", "")
+	}
+	if r.datacenter != nil {
+		parameterAddToHeaderOrQuery(localVarQueryParams, "datacenter", r.datacenter, "form", "")
 	}
 	if r.page != nil {
 		parameterAddToHeaderOrQuery(localVarQueryParams, "page", r.page, "form", "")
@@ -1230,7 +1240,7 @@ func (r ApiServersResizeRequest) Execute() (map[string]interface{}, *http.Respon
 /*
 ServersResize Resize a Server
 
-Moves a stopped server to a bigger plan and charges the prorated difference to the server's billing card, else your default card. Returns `200` when paid, `202` while the payment processes. Start the server afterwards.
+Moves a stopped server to a bigger plan and charges the prorated difference to the server's billing card, else your default card, or to account credit with `payment_method: credit`. Returns `200` when paid, `202` while the payment processes. Start the server afterwards.
 
 	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 	@param serverId

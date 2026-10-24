@@ -101,13 +101,14 @@ type Options struct {
 	DisableThrottle bool
 }
 type Client struct {
-	Account   *AccountService
-	Servers   *ServersService
-	Locations *CatalogService
-	Plans     *CatalogService
-	Images    *CatalogService
-	SSHKeys   *SSHKeysService
-	Invoices  *InvoicesService
+	Account     *AccountService
+	Servers     *ServersService
+	Locations   *CatalogService
+	Datacenters *CatalogService
+	Plans       *CatalogService
+	Images      *CatalogService
+	SSHKeys     *SSHKeysService
+	Invoices    *InvoicesService
 
 	api        *generated.APIClient
 	token      string
@@ -159,6 +160,7 @@ func New(o Options) (*Client, error) {
 	c.Account = &AccountService{c}
 	c.Servers = &ServersService{c}
 	c.Locations = &CatalogService{c, "locations_list"}
+	c.Datacenters = &CatalogService{c, "datacenters_list"}
 	c.Plans = &CatalogService{c, "plans_list"}
 	c.Images = &CatalogService{c, "images_list"}
 	c.SSHKeys = &SSHKeysService{c}

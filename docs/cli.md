@@ -2,11 +2,11 @@
 
 [Arct Cloud](https://www.arct.cloud) · [Hosted CLI guide](https://docs.arct.cloud/api-reference/cli) · [SDKs](../README.md)
 
-`arct` covers all 22 public API operations and ships with the Python SDK in `arct-cloud==0.1.0rc3`. Python 3.11+ is required. Commands, flags, saved contexts and credentials remain compatible with the previous Go CLI; historical [binary releases](https://github.com/ArctCloud/sdk/releases/tag/cli-v0.1.0-rc.2) remain available, but new CLI binaries are no longer published.
+`arct` covers 23 operations, including datacenter discovery, and ships with the Python SDK. This checkout prepares `arct-cloud==0.1.0rc4`; the published Python/CLI preview remains `0.1.0rc3`. Until publication, install this checkout with `python -m pip install ./python` from the repository root to use the datacenter commands. Python 3.11+ is required. Commands, flags, saved contexts and credentials remain compatible with the previous Go CLI; historical [binary releases](https://github.com/ArctCloud/sdk/releases/tag/cli-v0.1.0-rc.2) remain available, but new CLI binaries are no longer published.
 
 ## Install on macOS or Linux
 
-Install Python 3.11+ with virtual environment support, then run:
+To install the published `0.1.0rc3`, install Python 3.11+ with virtual environment support, then run:
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/ArctCloud/sdk/main/install.sh | sh
@@ -14,13 +14,13 @@ export PATH="$HOME/.local/bin:$PATH"
 arct --version
 ```
 
-The installer pins `arct-cloud==0.1.0rc3` in a private virtual environment under `~/.local/share/arct/` and exposes `~/.local/bin/arct`. It needs no sudo and leaves your system Python packages alone. It adds PATH setup to the zsh configuration or Bash startup files; other shells require manual PATH setup. Run the printed export in your current terminal because an installer cannot change its parent shell. `arct --version` reports `0.1.0rc3`.
+The installer pins the published `arct-cloud==0.1.0rc3` in a private virtual environment under `~/.local/share/arct/` and exposes `~/.local/bin/arct`. It needs no sudo and leaves your system Python packages alone. It adds PATH setup to the zsh configuration or Bash startup files; other shells require manual PATH setup. Run the printed export in your current terminal because an installer cannot change its parent shell. `arct --version` reports `0.1.0rc3`. The installer pin advances only after a new package is published; use a source installation for the prepared datacenter commands.
 
 Rerun the same installer to update to its pinned release or repair an installation. A failed package installation leaves the existing command available, and reruns do not duplicate shell profile entries.
 
 ## Install on Windows or in a Python environment
 
-Install into your chosen Python 3.11+ environment:
+Install the published preview into your chosen Python 3.11+ environment:
 
 ```sh
 python -m pip install "arct-cloud==0.1.0rc3"
@@ -30,7 +30,7 @@ python -m arct --help
 
 The package also installs the `arct` console command. If its scripts directory is on PATH, use `arct`; otherwise replace `arct` in the examples below with `python -m arct`. On Windows, `py -3.11` can replace `python` when selecting the interpreter.
 
-For source development, run `python -m pip install ./python` from the repository root.
+For source development, run `python -m pip install ./python` from the repository root. Use `python -m arct` with that interpreter if an older installed `arct` takes precedence.
 
 ## Migrate, update or uninstall
 
@@ -59,7 +59,10 @@ Remove the installer-added PATH line from your shell profile if no longer needed
 export ARCT_TOKEN='your-dashboard-created-token'
 arct account get
 arct servers list --output json
-arct servers list --location fra --all --columns id,hostname,status
+arct datacenters list --all
+arct servers list --datacenter ams2 --all --columns id,hostname,status
+arct plans list --datacenter ams2
+arct images list --datacenter ams2
 ```
 
 ## Mutations and command controls
@@ -67,21 +70,23 @@ arct servers list --location fra --all --columns id,hostname,status
 The following examples can charge a card, destroy data or change billing. `--yes` explicitly confirms each mutation:
 
 ```sh
-arct servers create --hostname web-1 --location fra --plan vm.small --image IMAGE_UUID --ssh-key KEY_UUID --yes --wait
+arct servers create --hostname web-1 --datacenter ams2 --plan hvm.nano --image IMAGE_UUID --ssh-key KEY_UUID --yes --wait
 arct servers resize-options SERVER_UUID
 arct servers resize SERVER_UUID --plan vm.medium --expected-amount 4.12 --yes
 arct servers delete SERVER_UUID --at-period-end --yes
 arct servers cancel-deletion SERVER_UUID --yes
 ```
 
-Command IDs must be UUIDs; replace the example placeholders. All 22 API operations are available under `account`, `servers`, `locations`, `plans`, `images`, `ssh-keys`, and `invoices`. `arct RESOURCE ACTION --help` lists applicable flags.
+Command IDs must be UUIDs; replace the example placeholders. The 23 supported API operations are available under `account`, `servers`, `datacenters`, `locations`, `plans`, `images`, `ssh-keys`, and `invoices`. `arct RESOURCE ACTION --help` lists applicable flags.
+
+Prefer `--datacenter` for explicit placement. Deprecated `--location` remains accepted: creation uses the location's default datacenter for the plan tier, while list filters retain location-wide behavior. Creation requires either placement field; matching values may be combined, and conflicting values are rejected.
 
 | Command | Request controls |
 | --- | --- |
-| `servers list` | `--status`, `--location` |
-| `plans list`, `images list` | `--location` |
+| `servers list` | `--status`, `--datacenter`, `--location` |
+| `plans list`, `images list` | `--datacenter`, `--location` |
 | Every API `list` | `--page`, `--per-page`, `--all` |
-| `servers create` | `--hostname`, `--location`, `--plan`, `--image`, `--billing-period`, repeated `--ssh-key`, `--coupon-code` or `--coupon-code-null`, `--enable-backups[=false]` |
+| `servers create` | `--hostname`, `--datacenter` or deprecated `--location`, `--plan`, `--image`, `--billing-period`, repeated `--ssh-key`, `--coupon-code` or `--coupon-code-null`, `--enable-backups[=false]` |
 | `servers update ID` | `--hostname`, `--delete-protection[=false]`, repeated `--label` |
 | `servers delete ID` | `--at-period-end[=false]`, `--yes`, immediate deletion supports `--wait` |
 | `servers reinstall ID` | `--image`, `--hostname`, repeated `--ssh-key`, `--yes` |
@@ -89,7 +94,7 @@ Command IDs must be UUIDs; replace the example placeholders. All 22 API operatio
 | `ssh-keys create` | `--name`, `--public-key` or `--public-key-file PATH` (`-` reads stdin) |
 | `servers wait ID` | `--status`, `--timeout` |
 
-`servers get/start/stop/restart/resize-options/cancel-deletion`, `account get`, `ssh-keys list/get/delete`, `locations list`, and `invoices list/get` complete the operation set. Delete, reinstall, resize, creation and cancellation of scheduled deletion require confirmation; pass `--yes` in automation. SSH key creation and state actions remain scriptable.
+`servers get/start/stop/restart/resize-options/cancel-deletion`, `account get`, `ssh-keys list/get/delete`, `datacenters list`, `locations list`, and `invoices list/get` complete the operation set. Delete, reinstall, resize, creation and cancellation of scheduled deletion require confirmation; pass `--yes` in automation. SSH key creation and state actions remain scriptable.
 
 Use `--ssh-key ''` for an explicit empty SSH-key array (password installation), `--label ''` to clear labels, and `--coupon-code-null` for a null coupon. Omitted arrays remain omitted. Boolean false requires `--enable-backups=false` or `--delete-protection=false`. Label requests retain the contract's maximum of 100; upstream prose says 10 and needs clarification.
 

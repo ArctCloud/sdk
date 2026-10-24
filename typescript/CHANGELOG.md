@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0-rc.5 (preview)
+
+- Add datacenter discovery, server creation and server/plan/image filters. Keep legacy location requests with a deprecation annotation.
+- Validate selector requests locally and reconcile uncertain creates using the requested datacenter. Preserve absent/null datacenter responses and unknown response fields.
+- Regenerate bindings from the live API snapshot with OpenAPI Generator 7.26.0.
+
 ## 0.1.0-rc.4 (preview)
 
 Format README examples with consistent indentation and shorter lines for the npm package page. SDK runtime behavior is unchanged.

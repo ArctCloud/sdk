@@ -23,7 +23,18 @@ class ResizeOptions(BaseModel):
     period_end: datetime | None
     days_left: StrictInt | None
     card: ResizeCard | None
+    payment_methods: list[StrictStr] = None
+    credit_balance: Decimal = None
     promo: ResizePromo | None
     unpaid_invoice: UnpaidInvoice | None
     pending_resize: PendingResize | None
     plans: list[ResizePlan]
+
+    @model_validator(mode='before')
+    @classmethod
+    def reject_null(cls, value):
+        if isinstance(value, dict):
+            for key in ['payment_methods', 'credit_balance']:
+                if key in value and value[key] is None:
+                    raise ValueError(f'{key} cannot be null')
+        return value

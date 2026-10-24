@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.0-rc.3 (preview)
+
+- Add datacenter discovery and selectors for server creation and server, plan and image lists.
+- Retain legacy location selectors and compare placement codes case-insensitively during uncertain-create discovery.
+
 ## 0.1.0-rc.2 (preview)
 
 - Cover all 22 Arct Cloud API operations with a shared Go client and standalone CLI.

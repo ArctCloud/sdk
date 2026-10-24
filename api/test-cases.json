@@ -419,6 +419,76 @@
           "details": null
         }
       }
+    },
+    {
+      "status": 400,
+      "body": {
+        "error": {
+          "code": "datacenter_unavailable",
+          "message": "Example API error.",
+          "details": null
+        }
+      }
+    },
+    {
+      "status": 422,
+      "body": {
+        "error": {
+          "code": "datacenter_mismatch",
+          "message": "Example API error.",
+          "details": null
+        }
+      }
+    },
+    {
+      "status": 400,
+      "body": {
+        "error": {
+          "code": "credit_unavailable",
+          "message": "Example API error.",
+          "details": null
+        }
+      }
+    },
+    {
+      "status": 400,
+      "body": {
+        "error": {
+          "code": "invoice_not_payable",
+          "message": "Example API error.",
+          "details": null
+        }
+      }
+    },
+    {
+      "status": 402,
+      "body": {
+        "error": {
+          "code": "insufficient_credit",
+          "message": "Example API error.",
+          "details": null
+        }
+      }
+    },
+    {
+      "status": 409,
+      "body": {
+        "error": {
+          "code": "node_maintenance",
+          "message": "Example API error.",
+          "details": null
+        }
+      }
+    },
+    {
+      "status": 409,
+      "body": {
+        "error": {
+          "code": "payment_in_progress",
+          "message": "Example API error.",
+          "details": null
+        }
+      }
     }
   ],
   "charge_unknown": {
@@ -582,5 +652,190 @@
     "maximum_attempts": 3,
     "poll_interval_seconds": 5,
     "wait_timeout_seconds": 600
+  },
+  "datacenter_unavailable": {
+    "status": 400,
+    "body": {
+      "error": {
+        "code": "datacenter_unavailable",
+        "message": "Example API error.",
+        "details": null
+      }
+    }
+  },
+  "datacenter_mismatch": {
+    "status": 422,
+    "body": {
+      "error": {
+        "code": "datacenter_mismatch",
+        "message": "Example API error.",
+        "details": null
+      }
+    }
+  },
+  "datacenter": {
+    "code": "ams2",
+    "location": "ams",
+    "name": "Amsterdam 2",
+    "region": "Europe",
+    "status": "online",
+    "is_preorder": false,
+    "tiers": [
+      "high_performance"
+    ]
+  },
+  "datacenters_page": {
+    "data": [
+      {
+        "code": "ams2",
+        "location": "ams",
+        "name": "Amsterdam 2",
+        "region": "Europe",
+        "status": "online",
+        "is_preorder": false,
+        "tiers": [
+          "high_performance"
+        ]
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "per_page": 20,
+      "total": 1,
+      "total_pages": 1
+    }
+  },
+  "location": {
+    "code": "ams",
+    "name": "Amsterdam",
+    "region": "Europe",
+    "status": "online",
+    "is_preorder": false,
+    "datacenters": [
+      "ams1",
+      "ams2"
+    ]
+  },
+  "plan": {
+    "slug": "hvm.nano",
+    "name": "High Performance Nano",
+    "location": "ams",
+    "datacenters": [
+      "ams2"
+    ],
+    "tier": "high_performance",
+    "cpu_cores": 1,
+    "ram_gb": 1,
+    "storage_gb": 20,
+    "bandwidth_tb": 1,
+    "network_speed_gbps": null,
+    "price_monthly": 5.99,
+    "in_stock": true,
+    "backups_available": false
+  },
+  "create_datacenter_request": {
+    "hostname": "web-1",
+    "datacenter": "ams2",
+    "plan": "hvm.nano",
+    "image_id": "3f1c2b9e-5d4a-4c1e-9b7a-2e6f8d0a1c35"
+  },
+  "create_datacenter": {
+    "order": {
+      "id": "22222222-2222-4222-8222-222222222222",
+      "order_number": "ORD-EXAMPLE",
+      "status": "paid",
+      "payment_method": "card",
+      "amount": 5.99,
+      "currency": "USD",
+      "created_at": "2026-10-17T00:00:00Z",
+      "paid_at": "2026-10-17T00:00:00Z",
+      "server_id": "11111111-1111-4111-8111-111111111111"
+    },
+    "server": {
+      "id": "11111111-1111-4111-8111-111111111111",
+      "hostname": "web-1",
+      "status": "provisioning",
+      "location": "ams",
+      "plan": "hvm.nano",
+      "plan_name": "Small",
+      "cpu_cores": 1,
+      "ram_gb": 2,
+      "storage_gb": 20,
+      "bandwidth_tb": 1,
+      "ipv4": "192.0.2.1",
+      "ipv6": null,
+      "os": "Ubuntu 24.04",
+      "login_user": "root",
+      "labels": [],
+      "delete_protection": false,
+      "billing_period": "monthly",
+      "price": 5.99,
+      "next_due_date": "2026-11-17",
+      "cancel_at": null,
+      "created_at": "2026-10-17T00:00:00Z",
+      "datacenter": "ams2"
+    },
+    "password": "fixture-password-only"
+  },
+  "server_datacenter_null": {
+    "id": "11111111-1111-4111-8111-111111111111",
+    "hostname": "web-1",
+    "status": "running",
+    "location": "fra",
+    "plan": "vm.small",
+    "plan_name": "Small",
+    "cpu_cores": 1,
+    "ram_gb": 2,
+    "storage_gb": 20,
+    "bandwidth_tb": 1,
+    "ipv4": "192.0.2.1",
+    "ipv6": null,
+    "os": "Ubuntu 24.04",
+    "login_user": "root",
+    "labels": [],
+    "delete_protection": false,
+    "billing_period": "monthly",
+    "price": 5.99,
+    "next_due_date": "2026-11-17",
+    "cancel_at": null,
+    "created_at": "2026-10-17T00:00:00Z",
+    "datacenter": null
+  },
+  "server_datacenter_absent": {
+    "id": "11111111-1111-4111-8111-111111111111",
+    "hostname": "web-1",
+    "status": "running",
+    "location": "fra",
+    "plan": "vm.small",
+    "plan_name": "Small",
+    "cpu_cores": 1,
+    "ram_gb": 2,
+    "storage_gb": 20,
+    "bandwidth_tb": 1,
+    "ipv4": "192.0.2.1",
+    "ipv6": null,
+    "os": "Ubuntu 24.04",
+    "login_user": "root",
+    "labels": [],
+    "delete_protection": false,
+    "billing_period": "monthly",
+    "price": 5.99,
+    "next_due_date": "2026-11-17",
+    "cancel_at": null,
+    "created_at": "2026-10-17T00:00:00Z"
+  },
+  "datacenter_filters": {
+    "servers": {
+      "datacenter": "ams2",
+      "location": "ams"
+    },
+    "plans": {
+      "datacenter": "ams2",
+      "location": "ams"
+    },
+    "images": {
+      "datacenter": "ams2",
+      "location": "ams"
+    }
   }
 }

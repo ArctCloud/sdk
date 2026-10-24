@@ -147,10 +147,29 @@
                   "type": "null"
                 }
               ],
-              "description": "Filter by location code, such as `fra`.",
+              "description": "Filter by location code, such as `fra`. A datacenter code here works like `datacenter`.",
               "title": "Location"
             },
-            "description": "Filter by location code, such as `fra`."
+            "description": "Filter by location code, such as `fra`. A datacenter code here works like `datacenter`."
+          },
+          {
+            "name": "datacenter",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^[A-Za-z]{2,5}[0-9]{1,2}$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by datacenter code, such as `fra1`.",
+              "title": "Datacenter"
+            },
+            "description": "Filter by datacenter code, such as `fra1`."
           },
           {
             "name": "page",
@@ -251,7 +270,7 @@
           "Servers"
         ],
         "summary": "Create a Server",
-        "description": "Creates a server and charges the first billing period to your default card, else your first saved card. A saved card is required. Poll `GET /servers/{server_id}` until `status` is `running`.",
+        "description": "Creates a server in `datacenter` and charges the first billing period to your default card, else your first saved card. A saved card is required unless `payment_method` is `credit`, which pays from account credit. Poll `GET /servers/{server_id}` until `status` is `running`.",
         "operationId": "servers_create",
         "security": [
           {
@@ -300,7 +319,7 @@
             }
           },
           "422": {
-            "description": "`validation_error`; see `details.fields`.",
+            "description": "`validation_error` (see `details.fields`; also when neither `datacenter` nor `location` is sent), `datacenter_mismatch` (`datacenter` and `location` disagree).",
             "content": {
               "application/json": {
                 "schema": {
@@ -330,7 +349,7 @@
             }
           },
           "400": {
-            "description": "`bad_request`, `invalid_promo_code`.",
+            "description": "`bad_request`, `invalid_promo_code`, `credit_unavailable`, `datacenter_unavailable` (the datacenter doesn't offer this plan).",
             "content": {
               "application/json": {
                 "schema": {
@@ -340,7 +359,7 @@
             }
           },
           "402": {
-            "description": "`authentication_required` (use the dashboard), `card_declined`, `no_payment_method`, `payment_failed`. Nothing charged.",
+            "description": "`authentication_required` (use the dashboard), `card_declined`, `no_payment_method`, `payment_failed`, `insufficient_credit` (`details.shortfall`). Nothing charged.",
             "content": {
               "application/json": {
                 "schema": {
@@ -595,7 +614,7 @@
             }
           },
           "409": {
-            "description": "`conflict`: delete protection is on; a backup, snapshot or restore is running; the server is a pre-order; or it is already being deleted. With `at_period_end`, also: an unpaid invoice; a pending resize; a renewal in progress; or no paid time left.",
+            "description": "`conflict`: delete protection is on; a backup, snapshot or restore is running; the server is a pre-order; or it is already being deleted. With `at_period_end`, also: an unpaid invoice; a pending resize; a renewal in progress; or no paid time left. `node_maintenance`: the host is under maintenance (immediate delete only); see `Retry-After`.",
             "content": {
               "application/json": {
                 "schema": {
@@ -847,13 +866,122 @@
         "x-arct-action": "list"
       }
     },
+    "/datacenters": {
+      "get": {
+        "tags": [
+          "Catalog"
+        ],
+        "summary": "List Datacenters",
+        "description": "Returns the datacenters you can order servers in. `location` is the location code without a number, as used by older requests.",
+        "operationId": "datacenters_list",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100000,
+              "minimum": 1,
+              "description": "Page number.",
+              "default": 1,
+              "title": "Page"
+            },
+            "description": "Page number."
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "description": "Items per page.",
+              "default": 20,
+              "title": "Per Page"
+            },
+            "description": "Items per page."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_Datacenter_"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "`invalid_token`, `token_disabled` or `token_expired`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "`account_disabled` or `api_access_disabled`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "`validation_error`; see `details.fields`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "`rate_limit_exceeded`; see `Retry-After`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "`internal_error`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "x-arct-resource": "datacenters",
+        "x-arct-action": "list"
+      }
+    },
     "/plans": {
       "get": {
         "tags": [
           "Catalog"
         ],
         "summary": "List Plans",
-        "description": "Returns plans and monthly prices per location. Filter with `location`.",
+        "description": "Returns plans and monthly prices per location. Filter with `datacenter` or `location`. With `datacenter`, `in_stock` is that datacenter's stock.",
         "operationId": "plans_list",
         "security": [
           {
@@ -875,10 +1003,29 @@
                   "type": "null"
                 }
               ],
-              "description": "Filter by location code, such as `fra`.",
+              "description": "Filter by location code, such as `fra`. A datacenter code here works like `datacenter`.",
               "title": "Location"
             },
-            "description": "Filter by location code, such as `fra`."
+            "description": "Filter by location code, such as `fra`. A datacenter code here works like `datacenter`."
+          },
+          {
+            "name": "datacenter",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^[A-Za-z]{2,5}[0-9]{1,2}$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by datacenter code, such as `fra1`.",
+              "title": "Datacenter"
+            },
+            "description": "Filter by datacenter code, such as `fra1`."
           },
           {
             "name": "page",
@@ -941,7 +1088,7 @@
             }
           },
           "422": {
-            "description": "`validation_error`; see `details.fields`.",
+            "description": "`validation_error`; see `details.fields`. `datacenter_mismatch`: `datacenter` isn't in `location`.",
             "content": {
               "application/json": {
                 "schema": {
@@ -971,7 +1118,7 @@
             }
           },
           "404": {
-            "description": "`not_found`: unknown `location`.",
+            "description": "`not_found`: unknown `location` or `datacenter`.",
             "content": {
               "application/json": {
                 "schema": {
@@ -991,7 +1138,7 @@
           "Catalog"
         ],
         "summary": "List OS Images",
-        "description": "Returns OS images per location. Filter with `location`.",
+        "description": "Returns OS images per location. Filter with `datacenter` or `location`.",
         "operationId": "images_list",
         "security": [
           {
@@ -1013,10 +1160,29 @@
                   "type": "null"
                 }
               ],
-              "description": "Filter by location code, such as `fra`.",
+              "description": "Filter by location code, such as `fra`. A datacenter code here works like `datacenter`.",
               "title": "Location"
             },
-            "description": "Filter by location code, such as `fra`."
+            "description": "Filter by location code, such as `fra`. A datacenter code here works like `datacenter`."
+          },
+          {
+            "name": "datacenter",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^[A-Za-z]{2,5}[0-9]{1,2}$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by datacenter code, such as `fra1`.",
+              "title": "Datacenter"
+            },
+            "description": "Filter by datacenter code, such as `fra1`."
           },
           {
             "name": "page",
@@ -1079,7 +1245,7 @@
             }
           },
           "422": {
-            "description": "`validation_error`; see `details.fields`.",
+            "description": "`validation_error`; see `details.fields`. `datacenter_mismatch`: `datacenter` isn't in `location`.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1109,7 +1275,7 @@
             }
           },
           "404": {
-            "description": "`not_found`: unknown `location`.",
+            "description": "`not_found`: unknown `location` or `datacenter`.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1839,7 +2005,7 @@
             }
           },
           "409": {
-            "description": "`conflict`: the current state doesn't allow this.",
+            "description": "`conflict`: the current state doesn't allow this. `node_maintenance`: the server's host is under maintenance; see `Retry-After` when the end is known.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1960,7 +2126,7 @@
             }
           },
           "409": {
-            "description": "`conflict`: the current state doesn't allow this.",
+            "description": "`conflict`: the current state doesn't allow this. `node_maintenance`: the server's host is under maintenance; see `Retry-After` when the end is known.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2081,7 +2247,7 @@
             }
           },
           "409": {
-            "description": "`conflict`: the current state doesn't allow this.",
+            "description": "`conflict`: the current state doesn't allow this. `node_maintenance`: the server's host is under maintenance; see `Retry-After` when the end is known.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2212,7 +2378,7 @@
             }
           },
           "409": {
-            "description": "`conflict`: the current state doesn't allow this.",
+            "description": "`conflict`: delete protection is on; the server isn't running or stopped; or it is suspended or a pre-order. `node_maintenance`: the host is under maintenance; see `Retry-After`.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2464,7 +2630,7 @@
           "Servers"
         ],
         "summary": "Resize a Server",
-        "description": "Moves a stopped server to a bigger plan and charges the prorated difference to the server's billing card, else your default card. Returns `200` when paid, `202` while the payment processes. Start the server afterwards.",
+        "description": "Moves a stopped server to a bigger plan and charges the prorated difference to the server's billing card, else your default card, or to account credit with `payment_method: credit`. Returns `200` when paid, `202` while the payment processes. Start the server afterwards.",
         "operationId": "servers_resize",
         "security": [
           {
@@ -2555,7 +2721,7 @@
             }
           },
           "400": {
-            "description": "`invalid_plan`, `ineligible`.",
+            "description": "`invalid_plan`, `ineligible`, `credit_unavailable`.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2565,7 +2731,7 @@
             }
           },
           "402": {
-            "description": "`authentication_required` (pay `details.hosted_invoice_url` within 1 hour), `card_declined`, `no_payment_method`.",
+            "description": "`authentication_required` (pay `details.hosted_invoice_url` within 1 hour), `card_declined`, `no_payment_method`, `insufficient_credit` (`details.shortfall`).",
             "content": {
               "application/json": {
                 "schema": {
@@ -2585,7 +2751,7 @@
             }
           },
           "409": {
-            "description": "`price_changed` (`details.amount`), `vm_state`, `conflict`, `pending`, `unpaid_invoice`, `subscription_not_active`, `cancel_scheduled`, `cancelled`, `refund_pending`, `unsupported_subscription`, `unknown_plan`, `unknown_price`, `no_billing_period`.",
+            "description": "`price_changed` (`details.amount`), `vm_state`, `conflict`, `pending`, `unpaid_invoice`, `subscription_not_active`, `cancel_scheduled`, `cancelled`, `refund_pending`, `unsupported_subscription`, `unknown_plan`, `unknown_price`, `no_billing_period`, `node_maintenance` (host under maintenance; see `Retry-After`).",
             "content": {
               "application/json": {
                 "schema": {
@@ -2617,6 +2783,266 @@
         },
         "x-arct-resource": "servers",
         "x-arct-action": "resize"
+      }
+    },
+    "/credit-transactions": {
+      "get": {
+        "tags": [
+          "Account credit"
+        ],
+        "summary": "List Credit Transactions",
+        "description": "Returns your account credit transactions, newest first.",
+        "operationId": "credit_transactions_list",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100000,
+              "minimum": 1,
+              "description": "Page number.",
+              "default": 1,
+              "title": "Page"
+            },
+            "description": "Page number."
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "description": "Items per page.",
+              "default": 20,
+              "title": "Per Page"
+            },
+            "description": "Items per page."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_CreditTransaction_"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "`invalid_token`, `token_disabled` or `token_expired`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "`account_disabled` or `api_access_disabled`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "`validation_error`; see `details.fields`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "`rate_limit_exceeded`; see `Retry-After`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "`internal_error`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "x-arct-resource": "credit_transactions",
+        "x-arct-action": "list"
+      }
+    },
+    "/invoices/{invoice_id}/pay": {
+      "post": {
+        "tags": [
+          "Invoices"
+        ],
+        "summary": "Pay an Invoice",
+        "description": "Pays a pending invoice in full from account credit and returns the paid invoice. Add credit in the dashboard under Billing > Account credits.",
+        "operationId": "invoices_pay",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "invoice_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Invoice Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PayInvoiceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Invoice"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "`invalid_token`, `token_disabled` or `token_expired`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "`account_disabled`, `api_access_disabled` or `insufficient_scope`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "`validation_error`; see `details.fields`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "`rate_limit_exceeded`; see `Retry-After`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "`internal_error`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "`credit_unavailable`, `invoice_not_payable` (not pending, or a resize invoice: resize with credit).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "`insufficient_credit`; `details.shortfall` is the USD missing. Nothing charged.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "`not_found`: unknown ID, or not yours.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "`payment_in_progress`: a card payment for this invoice is still running.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "`billing_unavailable`. Nothing debited; retry later.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "x-arct-resource": "invoices",
+        "x-arct-action": "pay"
       }
     }
   },
@@ -2653,12 +3079,18 @@
             "format": "date-time",
             "title": "Created At"
           },
+          "credit_balance": {
+            "type": "number",
+            "title": "Credit Balance",
+            "description": "Account credit, in USD."
+          },
+          "credit_autopay": {
+            "type": "boolean",
+            "title": "Credit Autopay",
+            "description": "True if account credit pays invoices on their due date."
+          },
           "token": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/TokenInfo"
-              }
-            ],
+            "$ref": "#/components/schemas/TokenInfo",
             "description": "The token that made this request."
           }
         },
@@ -2669,6 +3101,8 @@
           "name",
           "email_verified",
           "created_at",
+          "credit_balance",
+          "credit_autopay",
           "token"
         ],
         "title": "Account"
@@ -2682,11 +3116,18 @@
             "title": "Hostname",
             "description": "RFC 1123 label. A name used by your servers or open orders returns `409 hostname_taken`."
           },
+          "datacenter": {
+            "type": "string",
+            "pattern": "^[A-Za-z]{2,5}[0-9]{1,2}$",
+            "title": "Datacenter",
+            "description": "Datacenter code: the location code plus a number, such as `ams1`. From `GET /datacenters`, any case."
+          },
           "location": {
             "type": "string",
             "pattern": "^[A-Za-z0-9-]{1,10}$",
             "title": "Location",
-            "description": "Location code from `GET /locations`, any case."
+            "description": "Deprecated. Location code without a number, such as `ams`. Still accepted: the server goes to the location's default datacenter for the plan's tier. Use `datacenter`.",
+            "deprecated": true
           },
           "plan": {
             "type": "string",
@@ -2741,17 +3182,34 @@
             "title": "Enable Backups",
             "description": "True adds automatic backups for 20% of the plan price, where `backups_available` is true.",
             "default": false
+          },
+          "payment_method": {
+            "type": "string",
+            "enum": [
+              "card",
+              "credit"
+            ],
+            "title": "Payment Method",
+            "description": "`card` charges a saved card; `credit` pays from account credit and needs no card.",
+            "default": "card"
           }
         },
         "additionalProperties": false,
         "type": "object",
         "required": [
           "hostname",
-          "location",
           "plan",
           "image_id"
         ],
-        "title": "CreateServerRequest"
+        "title": "CreateServerRequest",
+        "examples": [
+          {
+            "datacenter": "ams2",
+            "hostname": "web-1",
+            "image_id": "3f1c2b9e-5d4a-4c1e-9b7a-2e6f8d0a1c35",
+            "plan": "hvm.nano"
+          }
+        ]
       },
       "CreateServerResponse": {
         "properties": {
@@ -2789,6 +3247,139 @@
         ],
         "title": "CreateServerResponse"
       },
+      "CreditTransaction": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "topup",
+              "order_payment",
+              "invoice_payment",
+              "invoice_refund",
+              "adjustment",
+              "refund_payout"
+            ],
+            "title": "Type"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "amount": {
+            "type": "number",
+            "title": "Amount",
+            "description": "Signed, in USD: positive adds credit, negative spends or removes it."
+          },
+          "balance_after": {
+            "type": "number",
+            "title": "Balance After",
+            "description": "Your account credit right after this entry, in USD."
+          },
+          "invoice_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invoice Id"
+          },
+          "order_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "created_at",
+          "type",
+          "description",
+          "amount",
+          "balance_after",
+          "invoice_id",
+          "order_id"
+        ],
+        "title": "CreditTransaction"
+      },
+      "Datacenter": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "Datacenter code: the location code plus a number, such as `ams1`."
+          },
+          "location": {
+            "type": "string",
+            "title": "Location",
+            "description": "Location code without a number, such as `ams`."
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "region": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Region"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "`online` or `maintenance`."
+          },
+          "is_preorder": {
+            "type": "boolean",
+            "title": "Is Preorder"
+          },
+          "tiers": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Tiers",
+            "description": "Plan tiers you can order in this datacenter."
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "location",
+          "name",
+          "region",
+          "status",
+          "is_preorder",
+          "tiers"
+        ],
+        "title": "Datacenter"
+      },
       "ErrorDetail": {
         "properties": {
           "code": {
@@ -2802,6 +3393,7 @@
           "details": {
             "anyOf": [
               {
+                "additionalProperties": true,
                 "type": "object"
               },
               {
@@ -3072,6 +3664,14 @@
           "is_preorder": {
             "type": "boolean",
             "title": "Is Preorder"
+          },
+          "datacenters": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Datacenters",
+            "description": "Datacenter codes in this location, such as `ams1`."
           }
         },
         "type": "object",
@@ -3080,7 +3680,8 @@
           "name",
           "region",
           "status",
-          "is_preorder"
+          "is_preorder",
+          "datacenters"
         ],
         "title": "Location"
       },
@@ -3104,7 +3705,8 @@
             "type": "string",
             "enum": [
               "card",
-              "promo"
+              "promo",
+              "credit"
             ],
             "title": "Payment Method"
           },
@@ -3160,6 +3762,46 @@
           "server_id"
         ],
         "title": "Order"
+      },
+      "Page_CreditTransaction_": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/CreditTransaction"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/Pagination"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "title": "Page[CreditTransaction]"
+      },
+      "Page_Datacenter_": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/Datacenter"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/Pagination"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "title": "Page[Datacenter]"
       },
       "Page_Image_": {
         "properties": {
@@ -3309,6 +3951,22 @@
         ],
         "title": "Pagination"
       },
+      "PayInvoiceRequest": {
+        "properties": {
+          "payment_method": {
+            "type": "string",
+            "const": "credit",
+            "title": "Payment Method",
+            "description": "`credit` pays the full total from account credit."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "payment_method"
+        ],
+        "title": "PayInvoiceRequest"
+      },
       "PendingResize": {
         "properties": {
           "id": {
@@ -3365,6 +4023,14 @@
             "type": "string",
             "title": "Location"
           },
+          "datacenters": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Datacenters",
+            "description": "Datacenters you can order this plan in, such as `ams1`."
+          },
           "tier": {
             "type": "string",
             "title": "Tier"
@@ -3415,6 +4081,7 @@
           "slug",
           "name",
           "location",
+          "datacenters",
           "tier",
           "cpu_cores",
           "ram_gb",
@@ -3584,6 +4251,23 @@
             ],
             "description": "The card a resize charges."
           },
+          "payment_methods": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "card",
+                "credit"
+              ]
+            },
+            "type": "array",
+            "title": "Payment Methods",
+            "description": "How a resize can be paid."
+          },
+          "credit_balance": {
+            "type": "number",
+            "title": "Credit Balance",
+            "description": "Your account credit, in USD."
+          },
           "promo": {
             "anyOf": [
               {
@@ -3633,6 +4317,8 @@
           "period_end",
           "days_left",
           "card",
+          "payment_methods",
+          "credit_balance",
           "promo",
           "unpaid_invoice",
           "pending_resize",
@@ -3860,6 +4546,16 @@
             ],
             "title": "Expected Amount",
             "description": "The quoted `amount_due_today`; a changed price returns `409 price_changed`. Omit to accept the current price."
+          },
+          "payment_method": {
+            "type": "string",
+            "enum": [
+              "card",
+              "credit"
+            ],
+            "title": "Payment Method",
+            "description": "`card` charges a saved card; `credit` pays from account credit and needs no card.",
+            "default": "card"
           }
         },
         "additionalProperties": false,
@@ -3887,6 +4583,18 @@
             "type": "string",
             "title": "Location",
             "description": "Location code, such as `fra`."
+          },
+          "datacenter": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Datacenter",
+            "description": "Datacenter code, such as `fra1`, or null if the host has none."
           },
           "plan": {
             "type": "string",
@@ -3970,7 +4678,7 @@
           "delete_protection": {
             "type": "boolean",
             "title": "Delete Protection",
-            "description": "True blocks `DELETE`."
+            "description": "True blocks `DELETE` and reinstall."
           },
           "billing_period": {
             "type": "string",
@@ -4020,6 +4728,7 @@
           "hostname",
           "status",
           "location",
+          "datacenter",
           "plan",
           "plan_name",
           "cpu_cores",
@@ -4266,12 +4975,16 @@
       "description": "The account and token behind the request."
     },
     {
+      "name": "Account credit",
+      "description": "Credit transactions. Add credit in the dashboard under Billing > Account credits."
+    },
+    {
       "name": "Servers",
       "description": "List, read, create, update, power, reinstall, resize and delete servers."
     },
     {
       "name": "Catalog",
-      "description": "Locations, plans and OS images you can order."
+      "description": "Datacenters, locations, plans and OS images you can order."
     },
     {
       "name": "Invoices",
