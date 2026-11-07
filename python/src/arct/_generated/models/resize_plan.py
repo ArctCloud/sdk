@@ -17,6 +17,7 @@ class ResizePlan(BaseModel):
     bandwidth_tb: StrictInt
     price_period: Decimal
     price_period_list: Decimal
+    addon_period: Decimal | None = None
     promo_applies: StrictBool
     is_current: StrictBool
     eligible: StrictBool

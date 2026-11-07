@@ -452,6 +452,8 @@ export interface ResizePlan {
 
     price_period_list: number;
 
+    addon_period?: number | null;
+
     promo_applies: boolean;
 
     is_current: boolean;
