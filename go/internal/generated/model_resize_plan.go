@@ -1,7 +1,7 @@
 /*
 Arct Cloud API
 
-Manage Arct Cloud servers over HTTPS with an API token. Errors return an `error` object with `code`, `message` and `details`.
+Manage Arct Cloud servers over HTTPS with an API token. API access needs a valid payment on the account. Errors return an `error` object with `code`, `message` and `details`.
 
 API version: 1.0.0
 */
@@ -30,8 +30,10 @@ type ResizePlan struct {
 	PricePeriod float32 `json:"price_period"`
 	// Price per billing period before promo, in USD.
 	PricePeriodList float32 `json:"price_period_list"`
-	PromoApplies    bool    `json:"promo_applies"`
-	IsCurrent       bool    `json:"is_current"`
+	// Backups add-on per billing period, in USD; null when backups are off.
+	AddonPeriod  NullableFloat32 `json:"addon_period,omitempty"`
+	PromoApplies bool            `json:"promo_applies"`
+	IsCurrent    bool            `json:"is_current"`
 	// True if the server can move to this plan.
 	Eligible    bool           `json:"eligible"`
 	Reason      NullableString `json:"reason"`
@@ -266,6 +268,49 @@ func (o *ResizePlan) SetPricePeriodList(v float32) {
 	o.PricePeriodList = v
 }
 
+// GetAddonPeriod returns the AddonPeriod field value if set, zero value otherwise (both if not set or set to explicit null).
+func (o *ResizePlan) GetAddonPeriod() float32 {
+	if o == nil || IsNil(o.AddonPeriod.Get()) {
+		var ret float32
+		return ret
+	}
+	return *o.AddonPeriod.Get()
+}
+
+// GetAddonPeriodOk returns a tuple with the AddonPeriod field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+// NOTE: If the value is an explicit nil, `nil, true` will be returned
+func (o *ResizePlan) GetAddonPeriodOk() (*float32, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return o.AddonPeriod.Get(), o.AddonPeriod.IsSet()
+}
+
+// HasAddonPeriod returns a boolean if a field has been set.
+func (o *ResizePlan) HasAddonPeriod() bool {
+	if o != nil && o.AddonPeriod.IsSet() {
+		return true
+	}
+
+	return false
+}
+
+// SetAddonPeriod gets a reference to the given NullableFloat32 and assigns it to the AddonPeriod field.
+func (o *ResizePlan) SetAddonPeriod(v float32) {
+	o.AddonPeriod.Set(&v)
+}
+
+// SetAddonPeriodNil sets the value for AddonPeriod to be an explicit nil
+func (o *ResizePlan) SetAddonPeriodNil() {
+	o.AddonPeriod.Set(nil)
+}
+
+// UnsetAddonPeriod ensures that no value is present for AddonPeriod, not even an explicit nil
+func (o *ResizePlan) UnsetAddonPeriod() {
+	o.AddonPeriod.Unset()
+}
+
 // GetPromoApplies returns the PromoApplies field value
 func (o *ResizePlan) GetPromoApplies() bool {
 	if o == nil {
@@ -434,6 +479,9 @@ func (o ResizePlan) ToMap() (map[string]interface{}, error) {
 	toSerialize["bandwidth_tb"] = o.BandwidthTb
 	toSerialize["price_period"] = o.PricePeriod
 	toSerialize["price_period_list"] = o.PricePeriodList
+	if o.AddonPeriod.IsSet() {
+		toSerialize["addon_period"] = o.AddonPeriod.Get()
+	}
 	toSerialize["promo_applies"] = o.PromoApplies
 	toSerialize["is_current"] = o.IsCurrent
 	toSerialize["eligible"] = o.Eligible
@@ -504,6 +552,7 @@ func (o *ResizePlan) UnmarshalJSON(data []byte) (err error) {
 		delete(additionalProperties, "bandwidth_tb")
 		delete(additionalProperties, "price_period")
 		delete(additionalProperties, "price_period_list")
+		delete(additionalProperties, "addon_period")
 		delete(additionalProperties, "promo_applies")
 		delete(additionalProperties, "is_current")
 		delete(additionalProperties, "eligible")

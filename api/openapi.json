@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Arct Cloud API",
-    "description": "Manage Arct Cloud servers over HTTPS with an API token. Errors return an `error` object with `code`, `message` and `details`.",
+    "description": "Manage Arct Cloud servers over HTTPS with an API token. API access needs a valid payment on the account. Errors return an `error` object with `code`, `message` and `details`.",
     "version": "1.0.0"
   },
   "servers": [
@@ -41,7 +41,7 @@
             }
           },
           "403": {
-            "description": "`account_disabled` or `api_access_disabled`.",
+            "description": "`account_disabled`, `api_access_disabled` or `account_not_eligible`.",
             "content": {
               "application/json": {
                 "schema": {
@@ -222,7 +222,7 @@
             }
           },
           "403": {
-            "description": "`account_disabled` or `api_access_disabled`.",
+            "description": "`account_disabled`, `api_access_disabled` or `account_not_eligible`.",
             "content": {
               "application/json": {
                 "schema": {
@@ -309,7 +309,7 @@
             }
           },
           "403": {
-            "description": "`account_disabled`, `api_access_disabled`, `insufficient_scope`, `email_not_verified`, `orders_disabled`.",
+            "description": "`account_disabled`, `api_access_disabled`, `account_not_eligible`, `insufficient_scope`, `email_not_verified`, `orders_disabled`.",
             "content": {
               "application/json": {
                 "schema": {
@@ -450,7 +450,7 @@
             }
           },
           "403": {
-            "description": "`account_disabled` or `api_access_disabled`.",
+            "description": "`account_disabled`, `api_access_disabled` or `account_not_eligible`.",
             "content": {
               "application/json": {
                 "schema": {
@@ -554,7 +554,7 @@
             }
           },
           "403": {
-            "description": "`account_disabled`, `api_access_disabled` or `insufficient_scope`.",
+            "description": "`account_disabled`, `api_access_disabled`, `account_not_eligible` or `insufficient_scope`.",
             "content": {
               "application/json": {
                 "schema": {
@@ -693,7 +693,7 @@
             }
           },
           "403": {
-            "description": "`account_disabled`, `api_access_disabled` or `insufficient_scope`.",
+            "description": "`account_disabled`, `api_access_disabled`, `account_not_eligible` or `insufficient_scope`.",
             "content": {
               "application/json": {
                 "schema": {
@@ -822,7 +822,7 @@
             }
           },
           "403": {
-            "description": "`account_disabled` or `api_access_disabled`.",
+            "description": "`account_disabled`, `api_access_disabled` or `account_not_eligible`.",
             "content": {
               "application/json": {
                 "schema": {
@@ -931,7 +931,7 @@
             }
           },
           "403": {
-            "description": "`account_disabled` or `api_access_disabled`.",
+            "description": "`account_disabled`, `api_access_disabled` or `account_not_eligible`.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1078,7 +1078,7 @@
             }
           },
           "403": {
-            "description": "`account_disabled` or `api_access_disabled`.",
+            "description": "`account_disabled`, `api_access_disabled` or `account_not_eligible`.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1235,7 +1235,7 @@
             }
           },
           "403": {
-            "description": "`account_disabled` or `api_access_disabled`.",
+            "description": "`account_disabled`, `api_access_disabled` or `account_not_eligible`.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1354,7 +1354,7 @@
             }
           },
           "403": {
-            "description": "`account_disabled` or `api_access_disabled`.",
+            "description": "`account_disabled`, `api_access_disabled` or `account_not_eligible`.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1445,7 +1445,7 @@
             }
           },
           "403": {
-            "description": "`account_disabled` or `api_access_disabled`.",
+            "description": "`account_disabled`, `api_access_disabled` or `account_not_eligible`.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1564,7 +1564,7 @@
             }
           },
           "403": {
-            "description": "`account_disabled` or `api_access_disabled`.",
+            "description": "`account_disabled`, `api_access_disabled` or `account_not_eligible`.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1651,7 +1651,7 @@
             }
           },
           "403": {
-            "description": "`account_disabled`, `api_access_disabled` or `insufficient_scope`.",
+            "description": "`account_disabled`, `api_access_disabled`, `account_not_eligible` or `insufficient_scope`.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1752,7 +1752,7 @@
             }
           },
           "403": {
-            "description": "`account_disabled` or `api_access_disabled`.",
+            "description": "`account_disabled`, `api_access_disabled` or `account_not_eligible`.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1844,7 +1844,7 @@
             }
           },
           "403": {
-            "description": "`account_disabled`, `api_access_disabled` or `insufficient_scope`.",
+            "description": "`account_disabled`, `api_access_disabled`, `account_not_eligible` or `insufficient_scope`.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1945,7 +1945,7 @@
             }
           },
           "403": {
-            "description": "`account_disabled`, `api_access_disabled` or `insufficient_scope`.",
+            "description": "`account_disabled`, `api_access_disabled`, `account_not_eligible` or `insufficient_scope`.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2066,7 +2066,7 @@
             }
           },
           "403": {
-            "description": "`account_disabled`, `api_access_disabled` or `insufficient_scope`.",
+            "description": "`account_disabled`, `api_access_disabled`, `account_not_eligible` or `insufficient_scope`.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2187,7 +2187,7 @@
             }
           },
           "403": {
-            "description": "`account_disabled`, `api_access_disabled` or `insufficient_scope`.",
+            "description": "`account_disabled`, `api_access_disabled`, `account_not_eligible` or `insufficient_scope`.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2318,7 +2318,7 @@
             }
           },
           "403": {
-            "description": "`account_disabled`, `api_access_disabled` or `insufficient_scope`.",
+            "description": "`account_disabled`, `api_access_disabled`, `account_not_eligible` or `insufficient_scope`.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2439,7 +2439,7 @@
             }
           },
           "403": {
-            "description": "`account_disabled`, `api_access_disabled` or `insufficient_scope`.",
+            "description": "`account_disabled`, `api_access_disabled`, `account_not_eligible` or `insufficient_scope`.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2560,7 +2560,7 @@
             }
           },
           "403": {
-            "description": "`account_disabled` or `api_access_disabled`.",
+            "description": "`account_disabled`, `api_access_disabled` or `account_not_eligible`.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2681,7 +2681,7 @@
             }
           },
           "403": {
-            "description": "`account_disabled`, `api_access_disabled`, `insufficient_scope`, `billing_mismatch` (contact support).",
+            "description": "`account_disabled`, `api_access_disabled`, `account_not_eligible`, `insufficient_scope`, `billing_mismatch` (contact support).",
             "content": {
               "application/json": {
                 "schema": {
@@ -2850,7 +2850,7 @@
             }
           },
           "403": {
-            "description": "`account_disabled` or `api_access_disabled`.",
+            "description": "`account_disabled`, `api_access_disabled` or `account_not_eligible`.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2951,7 +2951,7 @@
             }
           },
           "403": {
-            "description": "`account_disabled`, `api_access_disabled` or `insufficient_scope`.",
+            "description": "`account_disabled`, `api_access_disabled`, `account_not_eligible` or `insufficient_scope`.",
             "content": {
               "application/json": {
                 "schema": {
@@ -4362,6 +4362,18 @@
             "title": "Price Period List",
             "description": "Price per billing period before promo, in USD."
           },
+          "addon_period": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Addon Period",
+            "description": "Backups add-on per billing period, in USD; null when backups are off."
+          },
           "promo_applies": {
             "type": "boolean",
             "title": "Promo Applies"
@@ -4963,7 +4975,7 @@
     "securitySchemes": {
       "bearerAuth": {
         "type": "http",
-        "description": "API token from Dashboard > Settings > API Tokens.",
+        "description": "API token from Dashboard > Settings > API Tokens. Needs a valid payment on the account.",
         "scheme": "bearer",
         "bearerFormat": "arct_..."
       }

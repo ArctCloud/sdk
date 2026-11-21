@@ -1,7 +1,7 @@
 /*
 Arct Cloud API
 
-Manage Arct Cloud servers over HTTPS with an API token. Errors return an `error` object with `code`, `message` and `details`.
+Manage Arct Cloud servers over HTTPS with an API token. API access needs a valid payment on the account. Errors return an `error` object with `code`, `message` and `details`.
 
 API version: 1.0.0
 */
